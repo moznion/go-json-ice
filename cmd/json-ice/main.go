@@ -84,7 +84,6 @@ func main() {
 					g.NewRawStatement(`buff := bytes.NewBuffer([]byte("{"))`),
 				)
 
-				prependComma := false
 				for _, field := range structType.Fields.List {
 					fieldName := field.Names[0].Name
 					fieldType := types.ExprString(field.Type)
@@ -133,13 +132,7 @@ func main() {
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(
-							`_, err = buff.WriteString("%s"+serializer.SerializePropertyName("%s")+":"+string(%s))`,
-							(func() string {
-								if prependComma {
-									return ","
-								}
-								return ""
-							})(),
+							`_, err = buff.WriteString(serializer.SerializePropertyName("%s")+":"+string(%s)+",")`,
 							jsonPropertyName,
 							serializeFuncInvocation,
 						),
@@ -155,14 +148,16 @@ func main() {
 							buffWriteStmts...,
 						)
 					}
-
-					prependComma = true
 				}
 
 				funcStmt = funcStmt.AddStatements(
-					g.NewRawStatement(`_, err = buff.WriteString("}")`),
-					g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
-					g.NewReturnStatement("buff.Bytes(), nil"),
+					g.NewRawStatement(`bs := buff.Bytes()`),
+
+					// dealing with trailing comma
+					g.NewIf(`bs[len(bs)-1] == ','`, g.NewRawStatement("bs[len(bs)-1] = '}'")).
+						Else(g.NewElse(g.NewRawStatement("bs = append(bs, '}')"))),
+
+					g.NewReturnStatement("bs, nil"),
 				)
 
 				rootStmt = rootStmt.AddStatements(funcStmt)
