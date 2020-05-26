@@ -2,190 +2,57 @@
 
 package tests
 
-import (
-	"bytes"
-
-	"github.com/moznion/go-json-ice/serializer"
-)
+import "github.com/moznion/go-json-ice/serializer"
 
 func (s *BasicTypes) MarshalJSON() ([]byte, error) {
-	var err error
-	initBytes := make([]byte, 1, 500)
-	initBytes[0] = '{'
-	buff := bytes.NewBuffer(initBytes)
-	_, err = buff.WriteString("\"bool_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeBool(s.BoolValue))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"int_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeInt(int64(s.IntValue)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"int8_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeInt(int64(s.Int8Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"int16_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeInt(int64(s.Int16Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"int32_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeInt(int64(s.Int32Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"int64_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeInt(int64(s.Int64Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"uint_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeUint(uint64(s.UintValue)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"uint8_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeUint(uint64(s.Uint8Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"uint16_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeUint(uint64(s.Uint16Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"uint32_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeUint(uint64(s.Uint32Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"uint64_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeUint(uint64(s.Uint64Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"float32_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeFloat(float64(s.Float32Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"float64_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeFloat(float64(s.Float64Value)))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteString("\"string_value\":")
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.Write(serializer.SerializeString(s.StringValue))
-	if err != nil {
-		return nil, err
-	}
-	_, err = buff.WriteRune(',')
-	if err != nil {
-		return nil, err
-	}
-	bs := buff.Bytes()
-	if bs[len(bs)-1] == ',' {
-		bs[len(bs)-1] = '}'
+	buff := make([]byte, 1, 500)
+	buff[0] = '{'
+	buff = append(buff, "\"bool_value\":"...)
+	buff = append(buff, serializer.SerializeBool(s.BoolValue)...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"int_value\":"...)
+	buff = append(buff, serializer.SerializeInt(int64(s.IntValue))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"int8_value\":"...)
+	buff = append(buff, serializer.SerializeInt(int64(s.Int8Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"int16_value\":"...)
+	buff = append(buff, serializer.SerializeInt(int64(s.Int16Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"int32_value\":"...)
+	buff = append(buff, serializer.SerializeInt(int64(s.Int32Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"int64_value\":"...)
+	buff = append(buff, serializer.SerializeInt(int64(s.Int64Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"uint_value\":"...)
+	buff = append(buff, serializer.SerializeUint(uint64(s.UintValue))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"uint8_value\":"...)
+	buff = append(buff, serializer.SerializeUint(uint64(s.Uint8Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"uint16_value\":"...)
+	buff = append(buff, serializer.SerializeUint(uint64(s.Uint16Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"uint32_value\":"...)
+	buff = append(buff, serializer.SerializeUint(uint64(s.Uint32Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"uint64_value\":"...)
+	buff = append(buff, serializer.SerializeUint(uint64(s.Uint64Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"float32_value\":"...)
+	buff = append(buff, serializer.SerializeFloat(float64(s.Float32Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"float64_value\":"...)
+	buff = append(buff, serializer.SerializeFloat(float64(s.Float64Value))...)
+	buff = append(buff, ',')
+	buff = append(buff, "\"string_value\":"...)
+	buff = append(buff, serializer.SerializeString(s.StringValue)...)
+	buff = append(buff, ',')
+	if buff[len(buff)-1] == ',' {
+		buff[len(buff)-1] = '}'
 	} else {
-		bs = append(bs, '}')
+		buff = append(buff, '}')
 	}
-	return bs, nil
+	return buff, nil
 }

@@ -80,10 +80,8 @@ func main() {
 				funcStmt := g.NewFunc(
 					g.NewFuncReceiver("s", "*"+structName),
 					funcSignature,
-					g.NewRawStatement("var err error"),
-					g.NewRawStatement(`initBytes := make([]byte, 1, 500)`), // TODO calc cap size
-					g.NewRawStatement(`initBytes[0] = '{'`),
-					g.NewRawStatement(`buff := bytes.NewBuffer(initBytes)`),
+					g.NewRawStatement(`buff := make([]byte, 1, 500)`), // TODO calc cap size
+					g.NewRawStatement(`buff[0] = '{'`),
 				)
 
 				for _, field := range structType.Fields.List {
@@ -138,17 +136,14 @@ func main() {
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(
-							`_, err = buff.WriteString("\"%s\":")`,
+							`buff = append(buff, "\"%s\":"...)`,
 							jsonPropertyName,
 						),
-						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
 						g.NewRawStatementf(
-							`_, err = buff.Write(%s)`,
+							`buff = append(buff, %s...)`,
 							serializeFuncInvocation,
 						),
-						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
-						g.NewRawStatement(`_, err = buff.WriteRune(',')`),
-						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
+						g.NewRawStatement(`buff = append(buff, ',')`),
 					}
 
 					nonEmptyValueCondition := fmt.Sprintf("s.%s != %s", fieldName, emptyValue)
@@ -166,10 +161,9 @@ func main() {
 							stmt = []g.Statement{g.NewIf(
 								isNilCondition,
 								g.NewRawStatementf(
-									`_, err = buff.WriteString("\"%s\":null,")`,
+									`buff = append(buff, "\"%s\":null,"...)`,
 									jsonPropertyName,
 								),
-								g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
 							).Else(g.NewElse(buffWriteStmts...))}
 						}
 						funcStmt = funcStmt.AddStatements(stmt...)
@@ -177,13 +171,11 @@ func main() {
 				}
 
 				funcStmt = funcStmt.AddStatements(
-					g.NewRawStatement(`bs := buff.Bytes()`),
-
 					// dealing with trailing comma
-					g.NewIf(`bs[len(bs)-1] == ','`, g.NewRawStatement("bs[len(bs)-1] = '}'")).
-						Else(g.NewElse(g.NewRawStatement("bs = append(bs, '}')"))),
+					g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
+						Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
 
-					g.NewReturnStatement("bs, nil"),
+					g.NewReturnStatement("buff, nil"),
 				)
 
 				rootStmt = rootStmt.AddStatements(funcStmt)
