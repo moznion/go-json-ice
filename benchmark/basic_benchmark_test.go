@@ -22,7 +22,7 @@ var s = &BasicTypes{
 	StringValue:  `hello "world"`,
 }
 
-func BenchmarkMarsha_EncodingJSON(b *testing.B) {
+func BenchmarkMarshal_EncodingJSON(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		json.Marshal(s)

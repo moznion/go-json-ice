@@ -34,10 +34,10 @@ TBD
 goos: darwin
 goarch: amd64
 pkg: github.com/moznion/go-json-ice/benchmark
-BenchmarkMarsha_EncodingJSON-12          1148733              1022 ns/op             320 B/op          1 allocs/op
-BenchmarkMarshal_JSONIce-12              1932854               619 ns/op             512 B/op          1 allocs/op
+BenchmarkMarshal_EncodingJSON-12         1179403              1011 ns/op             320 B/op          1 allocs/op
+BenchmarkMarshal_JSONIce-12              1948980               622 ns/op             512 B/op          1 allocs/op
 PASS
-ok      github.com/moznion/go-json-ice/benchmark        4.520s
+ok      github.com/moznion/go-json-ice/benchmark        4.081s
 ```
 
 `make bench` command benchmarks the performance.
