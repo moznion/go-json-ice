@@ -1,6 +1,9 @@
 test: build4test gen
 	go test -v ./...
 
+bench: build4test gen
+	(cd benchmark && go test -bench . -benchmem)
+
 build4test:
 	go build -o dist/json-ice_test cmd/json-ice/main.go
 
