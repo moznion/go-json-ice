@@ -113,22 +113,22 @@ func main() {
 					}
 
 					emptyValue := ""
-					serializeFuncInvocation := ""
+					appendSerializedItemFuncInvocation := ""
 					switch fieldType {
 					case "bool":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeBool(%ss.%s)", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedBool(buff, %ss.%s)", getDereferenceSigil(isPointer), fieldName)
 						emptyValue = "false"
 					case "int", "int8", "int16", "int32", "int64":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeInt(int64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedInt(buff, int64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
 						emptyValue = "0"
 					case "uint", "uint8", "uint16", "uint32", "uint64":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeUint(uint64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedUint(buff, uint64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
 						emptyValue = "0"
 					case "float32", "float64":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeFloat(float64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedFloat(buff, float64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
 						emptyValue = "0"
 					case "string":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeString(%ss.%s)", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedString(buff, %ss.%s)", getDereferenceSigil(isPointer), fieldName)
 						emptyValue = `""`
 					default:
 						panic("TODO")
@@ -139,10 +139,7 @@ func main() {
 							`buff = append(buff, "\"%s\":"...)`,
 							jsonPropertyName,
 						),
-						g.NewRawStatementf(
-							`buff = append(buff, %s...)`,
-							serializeFuncInvocation,
-						),
+						g.NewRawStatementf("buff = %s", appendSerializedItemFuncInvocation),
 						g.NewRawStatement(`buff = append(buff, ',')`),
 					}
 

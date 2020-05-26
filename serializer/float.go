@@ -2,6 +2,6 @@ package serializer
 
 import "strconv"
 
-func SerializeFloat(v float64) []byte {
-	return []byte(strconv.FormatFloat(v, 'e', -1, 64))
+func AppendSerializedFloat(buff []byte, v float64) []byte {
+	return strconv.AppendFloat(buff, v, 'e', -1, 64)
 }

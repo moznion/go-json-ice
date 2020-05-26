@@ -2,6 +2,6 @@ package serializer
 
 import "strconv"
 
-func SerializeUint(v uint64) []byte {
-	return []byte(strconv.FormatUint(v, 10))
+func AppendSerializedUint(buff []byte, v uint64) []byte {
+	return strconv.AppendUint(buff, v, 10)
 }

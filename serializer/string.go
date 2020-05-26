@@ -2,6 +2,6 @@ package serializer
 
 import "strconv"
 
-func SerializeString(v string) []byte {
-	return []byte(strconv.Quote(v))
+func AppendSerializedString(buff []byte, v string) []byte {
+	return strconv.AppendQuote(buff, v)
 }

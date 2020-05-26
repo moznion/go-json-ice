@@ -9,34 +9,34 @@ func (s *OmitemptyPointerStruct) MarshalJSON() ([]byte, error) {
 	buff[0] = '{'
 	if s.EmptyBool != nil && *s.EmptyBool != false {
 		buff = append(buff, "\"empty_bool\":"...)
-		buff = append(buff, serializer.SerializeBool(*s.EmptyBool)...)
+		buff = serializer.AppendSerializedBool(buff, *s.EmptyBool)
 		buff = append(buff, ',')
 	}
 	if s.EmptyInt != nil && *s.EmptyInt != 0 {
 		buff = append(buff, "\"empty_int\":"...)
-		buff = append(buff, serializer.SerializeInt(int64(*s.EmptyInt))...)
+		buff = serializer.AppendSerializedInt(buff, int64(*s.EmptyInt))
 		buff = append(buff, ',')
 	}
 	if s.EmptyUint != nil && *s.EmptyUint != 0 {
 		buff = append(buff, "\"empty_uint\":"...)
-		buff = append(buff, serializer.SerializeUint(uint64(*s.EmptyUint))...)
+		buff = serializer.AppendSerializedUint(buff, uint64(*s.EmptyUint))
 		buff = append(buff, ',')
 	}
 	if s.EmptyFloat != nil && *s.EmptyFloat != 0 {
 		buff = append(buff, "\"empty_float\":"...)
-		buff = append(buff, serializer.SerializeFloat(float64(*s.EmptyFloat))...)
+		buff = serializer.AppendSerializedFloat(buff, float64(*s.EmptyFloat))
 		buff = append(buff, ',')
 	}
 	if s.EmptyString != nil && *s.EmptyString != "" {
 		buff = append(buff, "\"empty_string\":"...)
-		buff = append(buff, serializer.SerializeString(*s.EmptyString)...)
+		buff = serializer.AppendSerializedString(buff, *s.EmptyString)
 		buff = append(buff, ',')
 	}
 	if s.NotEmptyString == nil {
 		buff = append(buff, "\"not_empty_string\":null,"...)
 	} else {
 		buff = append(buff, "\"not_empty_string\":"...)
-		buff = append(buff, serializer.SerializeString(*s.NotEmptyString)...)
+		buff = serializer.AppendSerializedString(buff, *s.NotEmptyString)
 		buff = append(buff, ',')
 	}
 	if buff[len(buff)-1] == ',' {

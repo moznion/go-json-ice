@@ -5,9 +5,9 @@ var (
 	falseBytes = []byte("false")
 )
 
-func SerializeBool(b bool) []byte {
+func AppendSerializedBool(buff []byte, b bool) []byte {
 	if b {
-		return trueBytes
+		return append(buff, trueBytes...)
 	}
-	return falseBytes
+	return append(buff, falseBytes...)
 }
