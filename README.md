@@ -10,13 +10,13 @@ The status of this library is under development. API and all other has the possi
 
 [tinygo](https://github.com/tinygo-org/tinygo) doesn't support `encoding/json` package because reflection support is not enough: https://tinygo.org/lang-support/stdlib/#encoding-json
 
-This library aims to marshal a struct to JSON on tinygo environment. And it also suppose to run this library in restricted environment; for example, wasm sandbox runtime.
+This library aims to marshal a struct to JSON on tinygo environment. And it also supposes to run this library in restricted environment; for example, wasm sandbox runtime.
 
 So this library has the following features:
 
 - don't depend on `encoding/json` package
 - don't depend on `js` package
-  - don't depend on browser wasm runtime
+  - i.e. don't depend on browser wasm runtime
 
 This library has only one dependency for now, `strconv`.
 
