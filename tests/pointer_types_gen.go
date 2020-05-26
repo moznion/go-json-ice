@@ -12,155 +12,267 @@ func (s *PointerTypes) MarshalJSON() ([]byte, error) {
 	var err error
 	buff := bytes.NewBuffer([]byte("{"))
 	if s.BoolValue == nil {
-		_, err = buff.WriteString("\"bool_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"bool_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"bool_value\"" + ":" + string(serializer.SerializeBool(*s.BoolValue)) + ",")
+		_, err = buff.WriteString("\"bool_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeBool(*s.BoolValue))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.IntValue == nil {
-		_, err = buff.WriteString("\"int_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"int_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"int_value\"" + ":" + string(serializer.SerializeInt(int64(*s.IntValue))) + ",")
+		_, err = buff.WriteString("\"int_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeInt(int64(*s.IntValue)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Int8Value == nil {
-		_, err = buff.WriteString("\"int8_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"int8_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"int8_value\"" + ":" + string(serializer.SerializeInt(int64(*s.Int8Value))) + ",")
+		_, err = buff.WriteString("\"int8_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeInt(int64(*s.Int8Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Int16Value == nil {
-		_, err = buff.WriteString("\"int16_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"int16_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"int16_value\"" + ":" + string(serializer.SerializeInt(int64(*s.Int16Value))) + ",")
+		_, err = buff.WriteString("\"int16_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeInt(int64(*s.Int16Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Int32Value == nil {
-		_, err = buff.WriteString("\"int32_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"int32_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"int32_value\"" + ":" + string(serializer.SerializeInt(int64(*s.Int32Value))) + ",")
+		_, err = buff.WriteString("\"int32_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeInt(int64(*s.Int32Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Int64Value == nil {
-		_, err = buff.WriteString("\"int64_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"int64_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"int64_value\"" + ":" + string(serializer.SerializeInt(int64(*s.Int64Value))) + ",")
+		_, err = buff.WriteString("\"int64_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeInt(int64(*s.Int64Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.UintValue == nil {
-		_, err = buff.WriteString("\"uint_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"uint_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"uint_value\"" + ":" + string(serializer.SerializeUint(uint64(*s.UintValue))) + ",")
+		_, err = buff.WriteString("\"uint_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeUint(uint64(*s.UintValue)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Uint8Value == nil {
-		_, err = buff.WriteString("\"uint8_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"uint8_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"uint8_value\"" + ":" + string(serializer.SerializeUint(uint64(*s.Uint8Value))) + ",")
+		_, err = buff.WriteString("\"uint8_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeUint(uint64(*s.Uint8Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Uint16Value == nil {
-		_, err = buff.WriteString("\"uint16_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"uint16_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"uint16_value\"" + ":" + string(serializer.SerializeUint(uint64(*s.Uint16Value))) + ",")
+		_, err = buff.WriteString("\"uint16_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeUint(uint64(*s.Uint16Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Uint32Value == nil {
-		_, err = buff.WriteString("\"uint32_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"uint32_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"uint32_value\"" + ":" + string(serializer.SerializeUint(uint64(*s.Uint32Value))) + ",")
+		_, err = buff.WriteString("\"uint32_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeUint(uint64(*s.Uint32Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Uint64Value == nil {
-		_, err = buff.WriteString("\"uint64_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"uint64_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"uint64_value\"" + ":" + string(serializer.SerializeUint(uint64(*s.Uint64Value))) + ",")
+		_, err = buff.WriteString("\"uint64_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeUint(uint64(*s.Uint64Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Float32Value == nil {
-		_, err = buff.WriteString("\"float32_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"float32_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"float32_value\"" + ":" + string(serializer.SerializeFloat(float64(*s.Float32Value))) + ",")
+		_, err = buff.WriteString("\"float32_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeFloat(float64(*s.Float32Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.Float64Value == nil {
-		_, err = buff.WriteString("\"float64_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"float64_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"float64_value\"" + ":" + string(serializer.SerializeFloat(float64(*s.Float64Value))) + ",")
+		_, err = buff.WriteString("\"float64_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeFloat(float64(*s.Float64Value)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.StringValue == nil {
-		_, err = buff.WriteString("\"string_value\"" + ":" + string(serializer.SerializeNull()) + ",")
+		_, err = buff.WriteString("\"string_value\":null,")
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		_, err = buff.WriteString("\"string_value\"" + ":" + string(serializer.SerializeString(*s.StringValue)) + ",")
+		_, err = buff.WriteString("\"string_value\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeString(*s.StringValue))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}

@@ -136,10 +136,16 @@ func main() {
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(
-							`_, err = buff.WriteString("\"%s\""+":"+string(%s)+",")`,
+							`_, err = buff.WriteString("\"%s\":")`,
 							jsonPropertyName,
+						),
+						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
+						g.NewRawStatementf(
+							`_, err = buff.Write(%s)`,
 							serializeFuncInvocation,
 						),
+						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
+						g.NewRawStatement(`_, err = buff.WriteRune(',')`),
 						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
 					}
 
@@ -158,7 +164,7 @@ func main() {
 							stmt = []g.Statement{g.NewIf(
 								isNilCondition,
 								g.NewRawStatementf(
-									`_, err = buff.WriteString("\"%s\""+":"+string(serializer.SerializeNull())+",")`,
+									`_, err = buff.WriteString("\"%s\":null,")`,
 									jsonPropertyName,
 								),
 								g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),

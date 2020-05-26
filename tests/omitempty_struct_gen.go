@@ -12,36 +12,84 @@ func (s *OmitemptyStruct) MarshalJSON() ([]byte, error) {
 	var err error
 	buff := bytes.NewBuffer([]byte("{"))
 	if s.EmptyBool != false {
-		_, err = buff.WriteString("\"empty_bool\"" + ":" + string(serializer.SerializeBool(s.EmptyBool)) + ",")
+		_, err = buff.WriteString("\"empty_bool\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeBool(s.EmptyBool))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.EmptyInt != 0 {
-		_, err = buff.WriteString("\"empty_int\"" + ":" + string(serializer.SerializeInt(int64(s.EmptyInt))) + ",")
+		_, err = buff.WriteString("\"empty_int\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeInt(int64(s.EmptyInt)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.EmptyUint != 0 {
-		_, err = buff.WriteString("\"empty_uint\"" + ":" + string(serializer.SerializeUint(uint64(s.EmptyUint))) + ",")
+		_, err = buff.WriteString("\"empty_uint\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeUint(uint64(s.EmptyUint)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.EmptyFloat != 0 {
-		_, err = buff.WriteString("\"empty_float\"" + ":" + string(serializer.SerializeFloat(float64(s.EmptyFloat))) + ",")
+		_, err = buff.WriteString("\"empty_float\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeFloat(float64(s.EmptyFloat)))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
 	if s.EmptyString != "" {
-		_, err = buff.WriteString("\"empty_string\"" + ":" + string(serializer.SerializeString(s.EmptyString)) + ",")
+		_, err = buff.WriteString("\"empty_string\":")
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.Write(serializer.SerializeString(s.EmptyString))
+		if err != nil {
+			return nil, err
+		}
+		_, err = buff.WriteRune(',')
 		if err != nil {
 			return nil, err
 		}
 	}
-	_, err = buff.WriteString("\"not_empty_string\"" + ":" + string(serializer.SerializeString(s.NotEmptyString)) + ",")
+	_, err = buff.WriteString("\"not_empty_string\":")
+	if err != nil {
+		return nil, err
+	}
+	_, err = buff.Write(serializer.SerializeString(s.NotEmptyString))
+	if err != nil {
+		return nil, err
+	}
+	_, err = buff.WriteRune(',')
 	if err != nil {
 		return nil, err
 	}
