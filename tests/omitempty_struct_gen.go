@@ -11,7 +11,7 @@ import (
 func (s *OmitemptyStruct) MarshalJSON() ([]byte, error) {
 	var err error
 	buff := bytes.NewBuffer([]byte("{"))
-	if s.EmptyBool {
+	if s.EmptyBool != false {
 		_, err = buff.WriteString(serializer.SerializePropertyName("empty_bool") + ":" + string(serializer.SerializeBool(s.EmptyBool)) + ",")
 		if err != nil {
 			return nil, err

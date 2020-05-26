@@ -27,4 +27,3 @@ func ParsePackage(dirPattern []string) (*packages.Package, error) {
 	}
 	return pkgs[0], nil
 }
-

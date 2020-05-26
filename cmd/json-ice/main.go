@@ -106,26 +106,30 @@ func main() {
 						}
 					}
 
-					// TODO support pointer type
+					isPointer := false
+					if strings.HasPrefix(fieldType, "*") {
+						fieldType = strings.Replace(fieldType, "*", "", 1)
+						isPointer = true
+					}
 
-					nonEmptyValueCondition := ""
+					emptyValue := ""
 					serializeFuncInvocation := ""
 					switch fieldType {
 					case "bool":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeBool(s.%s)", fieldName)
-						nonEmptyValueCondition = fmt.Sprintf("s.%s", fieldName) // TODO pointer type support
+						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeBool(%ss.%s)", getDereferenceSigil(isPointer), fieldName)
+						emptyValue = "false"
 					case "int", "int8", "int16", "int32", "int64":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeInt(int64(s.%s))", fieldName)
-						nonEmptyValueCondition = fmt.Sprintf("s.%s != 0", fieldName) // TODO pointer type support
+						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeInt(int64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						emptyValue = "0"
 					case "uint", "uint8", "uint16", "uint32", "uint64":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeUint(uint64(s.%s))", fieldName)
-						nonEmptyValueCondition = fmt.Sprintf("s.%s != 0", fieldName) // TODO pointer type support
+						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeUint(uint64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						emptyValue = "0"
 					case "float32", "float64":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeFloat(float64(s.%s))", fieldName)
-						nonEmptyValueCondition = fmt.Sprintf("s.%s != 0", fieldName) // TODO pointer type support
+						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeFloat(float64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						emptyValue = "0"
 					case "string":
-						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeString(s.%s)", fieldName)
-						nonEmptyValueCondition = fmt.Sprintf(`s.%s != ""`, fieldName) // TODO pointer type support
+						serializeFuncInvocation = fmt.Sprintf("serializer.SerializeString(%ss.%s)", getDereferenceSigil(isPointer), fieldName)
+						emptyValue = `""`
 					default:
 						panic("TODO")
 					}
@@ -139,14 +143,28 @@ func main() {
 						g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
 					}
 
+					nonEmptyValueCondition := fmt.Sprintf("s.%s != %s", fieldName, emptyValue)
+					isNilCondition := ""
+					if isPointer {
+						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, emptyValue)
+					}
+
 					if isOmitEmpty {
-						funcStmt = funcStmt.AddStatements(
-							g.NewIf(nonEmptyValueCondition, buffWriteStmts...),
-						)
+						funcStmt = funcStmt.AddStatements(g.NewIf(nonEmptyValueCondition, buffWriteStmts...))
 					} else {
-						funcStmt = funcStmt.AddStatements(
-							buffWriteStmts...,
-						)
+						stmt := buffWriteStmts
+						if isNilCondition != "" {
+							stmt = []g.Statement{g.NewIf(
+								isNilCondition,
+								g.NewRawStatementf(
+									`_, err = buff.WriteString(serializer.SerializePropertyName("%s")+":"+string(serializer.SerializeNull())+",")`,
+									jsonPropertyName,
+								),
+								g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
+							).Else(g.NewElse(buffWriteStmts...))}
+						}
+						funcStmt = funcStmt.AddStatements(stmt...)
 					}
 				}
 
@@ -196,4 +214,11 @@ func isDirectory(name string) bool {
 		log.Fatal(err)
 	}
 	return info.IsDir()
+}
+
+func getDereferenceSigil(isPointer bool) string {
+	if isPointer {
+		return "*"
+	}
+	return ""
 }
