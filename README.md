@@ -6,7 +6,7 @@ The status of this library is under development. API and all other has the possi
 
 ## Motivation
 
-### for on `tinygo` "restricted" environment
+### for "restricted" tinygo environment
 
 [tinygo](https://github.com/tinygo-org/tinygo) doesn't support `encoding/json` package because reflection support is not enough: https://tinygo.org/lang-support/stdlib/#encoding-json
 
