@@ -81,7 +81,9 @@ func main() {
 					g.NewFuncReceiver("s", "*"+structName),
 					funcSignature,
 					g.NewRawStatement("var err error"),
-					g.NewRawStatement(`buff := bytes.NewBuffer([]byte("{"))`),
+					g.NewRawStatement(`initBytes := make([]byte, 1, 500)`), // TODO calc cap size
+					g.NewRawStatement(`initBytes[0] = '{'`),
+					g.NewRawStatement(`buff := bytes.NewBuffer(initBytes)`),
 				)
 
 				for _, field := range structType.Fields.List {

@@ -10,7 +10,9 @@ import (
 
 func (s *BasicTypes) MarshalJSON() ([]byte, error) {
 	var err error
-	buff := bytes.NewBuffer([]byte("{"))
+	initBytes := make([]byte, 1, 500)
+	initBytes[0] = '{'
+	buff := bytes.NewBuffer(initBytes)
 	_, err = buff.WriteString("\"bool_value\":")
 	if err != nil {
 		return nil, err

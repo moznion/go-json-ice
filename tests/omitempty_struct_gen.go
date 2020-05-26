@@ -10,7 +10,9 @@ import (
 
 func (s *OmitemptyStruct) MarshalJSON() ([]byte, error) {
 	var err error
-	buff := bytes.NewBuffer([]byte("{"))
+	initBytes := make([]byte, 1, 500)
+	initBytes[0] = '{'
+	buff := bytes.NewBuffer(initBytes)
 	if s.EmptyBool != false {
 		_, err = buff.WriteString("\"empty_bool\":")
 		if err != nil {
