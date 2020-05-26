@@ -136,7 +136,7 @@ func main() {
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(
-							`_, err = buff.WriteString(serializer.SerializePropertyName("%s")+":"+string(%s)+",")`,
+							`_, err = buff.WriteString("\"%s\""+":"+string(%s)+",")`,
 							jsonPropertyName,
 							serializeFuncInvocation,
 						),
@@ -158,7 +158,7 @@ func main() {
 							stmt = []g.Statement{g.NewIf(
 								isNilCondition,
 								g.NewRawStatementf(
-									`_, err = buff.WriteString(serializer.SerializePropertyName("%s")+":"+string(serializer.SerializeNull())+",")`,
+									`_, err = buff.WriteString("\"%s\""+":"+string(serializer.SerializeNull())+",")`,
 									jsonPropertyName,
 								),
 								g.NewIf("err != nil", g.NewReturnStatement("nil", "err")),
