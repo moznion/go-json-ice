@@ -26,7 +26,7 @@ func TestMarshalBasicTypes(t *testing.T) {
 		StringValue:  `hello "world"`,
 	}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalBasicTypesAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)

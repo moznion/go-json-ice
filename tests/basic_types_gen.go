@@ -4,7 +4,7 @@ package tests
 
 import "github.com/moznion/go-json-ice/serializer"
 
-func (s *BasicTypes) MarshalJSON() ([]byte, error) {
+func MarshalBasicTypesAsJSON(s *BasicTypes) ([]byte, error) {
 	buff := make([]byte, 1, 500)
 	buff[0] = '{'
 	buff = append(buff, "\"bool_value\":"...)

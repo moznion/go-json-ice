@@ -76,9 +76,12 @@ func main() {
 					continue
 				}
 
-				funcSignature := g.NewFuncSignature("MarshalJSON").ReturnTypes("[]byte", "error")
+				funcName := fmt.Sprintf("Marshal%sAsJSON", structName)
+				funcSignature := g.NewFuncSignature(funcName).
+					Parameters(g.NewFuncParameter("s", "*"+structName)).
+					ReturnTypes("[]byte", "error")
 				funcStmt := g.NewFunc(
-					g.NewFuncReceiver("s", "*"+structName),
+					nil,
 					funcSignature,
 					g.NewRawStatement(`buff := make([]byte, 1, 500)`), // TODO calc cap size
 					g.NewRawStatement(`buff[0] = '{'`),

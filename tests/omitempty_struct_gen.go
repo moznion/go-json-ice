@@ -4,7 +4,7 @@ package tests
 
 import "github.com/moznion/go-json-ice/serializer"
 
-func (s *OmitemptyStruct) MarshalJSON() ([]byte, error) {
+func MarshalOmitemptyStructAsJSON(s *OmitemptyStruct) ([]byte, error) {
 	buff := make([]byte, 1, 500)
 	buff[0] = '{'
 	if s.EmptyBool != false {

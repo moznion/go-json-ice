@@ -41,7 +41,7 @@ func TestMarshalPointerTypesWithValues(t *testing.T) {
 		StringValue:  &stringValue,
 	}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalPointerTypesAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)
@@ -70,7 +70,7 @@ func TestMarshalPointerTypesWithNulls(t *testing.T) {
 		StringValue:  nil,
 	}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalPointerTypesAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)

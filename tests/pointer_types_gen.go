@@ -4,7 +4,7 @@ package tests
 
 import "github.com/moznion/go-json-ice/serializer"
 
-func (s *PointerTypes) MarshalJSON() ([]byte, error) {
+func MarshalPointerTypesAsJSON(s *PointerTypes) ([]byte, error) {
 	buff := make([]byte, 1, 500)
 	buff[0] = '{'
 	if s.BoolValue == nil {

@@ -10,7 +10,7 @@ import (
 func TestOmitemptyWithoutFields(t *testing.T) {
 	given := &OmitemptyStruct{}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalOmitemptyStructAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)
@@ -28,7 +28,7 @@ func TestOmitemptyWithEmptyValues(t *testing.T) {
 		NotEmptyString: "",
 	}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalOmitemptyStructAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)
@@ -46,7 +46,7 @@ func TestOmitemptyPointerWithNullValues(t *testing.T) {
 		NotEmptyString: nil,
 	}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalOmitemptyPointerStructAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)
@@ -71,7 +71,7 @@ func TestOmitemptyPointerWithEmptyValues(t *testing.T) {
 		NotEmptyString: &notEmptyString,
 	}
 
-	serialized, err := given.MarshalJSON()
+	serialized, err := MarshalOmitemptyPointerStructAsJSON(given)
 	assert.NoError(t, err)
 
 	log.Printf("[debug] %s", serialized)
