@@ -17,5 +17,6 @@ type OmitemptyPointerStruct struct {
 	EmptyUint      *uint    `json:"empty_uint,omitempty"`
 	EmptyFloat     *float32 `json:"empty_float,omitempty"`
 	EmptyString    *string  `json:"empty_string,omitempty"`
+	EmptySlice     []string `json:"empty_slice,omitempty"`
 	NotEmptyString *string  `json:"not_empty_string"`
 }

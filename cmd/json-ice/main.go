@@ -109,6 +109,12 @@ func main() {
 						}
 					}
 
+					isSlice := false
+					if strings.HasPrefix(fieldType, "[]") {
+						fieldType = strings.Replace(fieldType, "[]", "", 1)
+						isSlice = true
+					}
+
 					isPointer := false
 					if strings.HasPrefix(fieldType, "*") {
 						fieldType = strings.Replace(fieldType, "*", "", 1)
@@ -119,19 +125,19 @@ func main() {
 					appendSerializedItemFuncInvocation := ""
 					switch fieldType {
 					case "bool":
-						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedBool(buff, %ss.%s)", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = "serializer.AppendSerializedBool(buff, %s)"
 						emptyValue = "false"
 					case "int", "int8", "int16", "int32", "int64":
-						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedInt(buff, int64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = "serializer.AppendSerializedInt(buff, int64(%s))"
 						emptyValue = "0"
 					case "uint", "uint8", "uint16", "uint32", "uint64":
-						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedUint(buff, uint64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = "serializer.AppendSerializedUint(buff, uint64(%s))"
 						emptyValue = "0"
 					case "float32", "float64":
-						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedFloat(buff, float64(%ss.%s))", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = "serializer.AppendSerializedFloat(buff, float64(%s))"
 						emptyValue = "0"
 					case "string":
-						appendSerializedItemFuncInvocation = fmt.Sprintf("serializer.AppendSerializedString(buff, %ss.%s)", getDereferenceSigil(isPointer), fieldName)
+						appendSerializedItemFuncInvocation = "serializer.AppendSerializedString(buff, %s)"
 						emptyValue = `""`
 					default:
 						panic("TODO")
@@ -142,13 +148,34 @@ func main() {
 							`buff = append(buff, "\"%s\":"...)`,
 							jsonPropertyName,
 						),
-						g.NewRawStatementf("buff = %s", appendSerializedItemFuncInvocation),
-						g.NewRawStatement(`buff = append(buff, ',')`),
 					}
+					buffWriteStmts = append(buffWriteStmts,
+						func() []g.Statement {
+							if isSlice {
+								return []g.Statement{
+									g.NewRawStatement("buff = append(buff, '[')"),
+									g.NewFor(
+										fmt.Sprintf("_, v := range s.%s", fieldName),
+										g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, getDereferenceSigil(isPointer)+"v")),
+										g.NewRawStatement("buff = append(buff, ',')"),
+									),
+									// dealing with trailing comma
+									g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = ']'")).
+										Else(g.NewElse(g.NewRawStatement("buff = append(buff, ']')"))),
+								}
+							}
+
+							return []g.Statement{g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(isPointer), fieldName)))}
+						}()...,
+					)
+					buffWriteStmts = append(buffWriteStmts, g.NewRawStatement(`buff = append(buff, ',')`))
 
 					nonEmptyValueCondition := fmt.Sprintf("s.%s != %s", fieldName, emptyValue)
 					isNilCondition := ""
-					if isPointer {
+					if isSlice {
+						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && len(s.%s) > 0", fieldName, fieldName)
+					} else if isPointer {
 						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
 						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, emptyValue)
 					}
