@@ -125,12 +125,6 @@ func main() {
 					}
 
 					appendSerializedItemFuncInvocation, emptyValue := getTypeToSerializerAndEmptyValue(fieldType)
-					appendSerializedMapKeyTypeInvocation := ""
-					appendSerializedMapValueTypeInvocation := ""
-					if matched := mapFieldTypeRe.FindStringSubmatch(fieldType); len(matched) >= 3 {
-						appendSerializedMapKeyTypeInvocation, _ = getTypeToSerializerAndEmptyValue(matched[1])
-						appendSerializedMapValueTypeInvocation, _ = getTypeToSerializerAndEmptyValue(matched[2])
-					}
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(
@@ -146,22 +140,6 @@ func main() {
 									g.NewFor(
 										fmt.Sprintf("_, v := range s.%s", fieldName),
 										func() []g.Statement {
-											if appendSerializedMapKeyTypeInvocation != "" && appendSerializedMapValueTypeInvocation != "" {
-												return []g.Statement{
-													g.NewRawStatement("buff = append(buff, '{')"),
-													g.NewFor(
-														"mapKey, mapValue := range v",
-														g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapKeyTypeInvocation, "mapKey")), // TODO quote
-														g.NewRawStatement("buff = append(buff, ':')"),
-														g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapValueTypeInvocation, "mapValue")),
-														g.NewRawStatement("buff = append(buff, ',')"),
-													),
-													// dealing with trailing comma
-													g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
-														Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
-													g.NewRawStatement("buff = append(buff, ',')"),
-												}
-											}
 											return []g.Statement{
 												g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, getDereferenceSigil(isPointer)+"v")),
 												g.NewRawStatement("buff = append(buff, ',')"),
@@ -172,22 +150,6 @@ func main() {
 									// dealing with trailing comma
 									g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = ']'")).
 										Else(g.NewElse(g.NewRawStatement("buff = append(buff, ']')"))),
-								}
-							}
-
-							if appendSerializedMapKeyTypeInvocation != "" && appendSerializedMapValueTypeInvocation != "" {
-								return []g.Statement{
-									g.NewRawStatement("buff = append(buff, '{')"),
-									g.NewFor(
-										fmt.Sprintf("mapKey, mapValue := range s.%s", fieldName),
-										g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapKeyTypeInvocation, "mapKey")), // TODO quote
-										g.NewRawStatement("buff = append(buff, ':')"),
-										g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapValueTypeInvocation, "mapValue")),
-										g.NewRawStatement("buff = append(buff, ',')"),
-									),
-									// dealing with trailing comma
-									g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
-										Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
 								}
 							}
 
@@ -289,7 +251,27 @@ func getTypeToSerializerAndEmptyValue(typ string) (string, string) {
 	case "string":
 		return "serializer.AppendSerializedString(buff, %s)", `""`
 	default:
-		return "TODO", "TODO"
-		//panic("TODO")
+		// map type
+		if matched := mapFieldTypeRe.FindStringSubmatch(typ); len(matched) >= 3 {
+			appendSerializedMapKeyTypeInvocation, _ := getTypeToSerializerAndEmptyValue(matched[1])
+			appendSerializedMapValueTypeInvocation, _ := getTypeToSerializerAndEmptyValue(matched[2])
+
+			code, _ := g.NewRoot( // TODO error handling
+				g.NewRawStatement("append(buff, '{')"), // XXX caller must have `buff = ` previously
+				g.NewFor(
+					"mapKey, mapValue := range %s",
+					g.NewRawStatementf("buff = "+appendSerializedMapKeyTypeInvocation, "mapKey"), // TODO quote key
+					g.NewRawStatement("buff = append(buff, ':')"),
+					g.NewRawStatementf("buff = "+appendSerializedMapValueTypeInvocation, "mapValue"),
+					g.NewRawStatement("buff = append(buff, ',')"),
+				),
+				// dealing with trailing comma
+				g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
+					Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
+			).Generate(0)
+			return code, "nil" // TODO handle omitempty
+		}
+
+		panic("TODO")
 	}
 }
