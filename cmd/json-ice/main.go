@@ -253,14 +253,31 @@ func getTypeToSerializerAndEmptyValue(typ string) (string, string) {
 	default:
 		// map type
 		if matched := mapFieldTypeRe.FindStringSubmatch(typ); len(matched) >= 3 {
-			appendSerializedMapKeyTypeInvocation, _ := getTypeToSerializerAndEmptyValue(matched[1])
-			appendSerializedMapValueTypeInvocation, _ := getTypeToSerializerAndEmptyValue(matched[2])
+			keyType := matched[1]
+			valueType := matched[2]
+			appendSerializedMapKeyTypeInvocation, _ := getTypeToSerializerAndEmptyValue(keyType)
+			appendSerializedMapValueTypeInvocation, _ := getTypeToSerializerAndEmptyValue(valueType)
 
 			code, _ := g.NewRoot( // TODO error handling
 				g.NewRawStatement("append(buff, '{')"), // XXX caller must have `buff = ` previously
 				g.NewFor(
 					"mapKey, mapValue := range %s",
-					g.NewRawStatementf("buff = "+appendSerializedMapKeyTypeInvocation, "mapKey"), // TODO quote key
+					func() []g.Statement {
+						if keyType == "string" {
+							// key has been already quoted
+							return []g.Statement{
+								g.NewRawStatementf("buff = "+appendSerializedMapKeyTypeInvocation, "mapKey"),
+							}
+						}
+
+						// quote the key manually
+						return []g.Statement{
+							g.NewRawStatement(`buff = append(buff, '"')`),
+							g.NewRawStatementf(`buff = `+appendSerializedMapKeyTypeInvocation, "mapKey"),
+							g.NewRawStatement(`buff = append(buff, '"')`),
+						}
+					}()...,
+				).AddStatements(
 					g.NewRawStatement("buff = append(buff, ':')"),
 					g.NewRawStatementf("buff = "+appendSerializedMapValueTypeInvocation, "mapValue"),
 					g.NewRawStatement("buff = append(buff, ',')"),
