@@ -23,8 +23,6 @@ var (
 	output   = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
 )
 
-var mapFieldTypeRe = regexp.MustCompile("^map\\[([^]]+)](.+)")
-
 func main() {
 	flag.Parse()
 
@@ -252,7 +250,7 @@ func getTypeToSerializerAndEmptyValue(typ string) (string, string) {
 		return "serializer.AppendSerializedString(buff, %s)", `""`
 	default:
 		// map type
-		if matched := mapFieldTypeRe.FindStringSubmatch(typ); len(matched) >= 3 {
+		if matched := regexp.MustCompile("^map\\[([^]]+)](.+)").FindStringSubmatch(typ); len(matched) >= 3 {
 			keyType := matched[1]
 			valueType := matched[2]
 			appendSerializedMapKeyTypeInvocation, _ := getTypeToSerializerAndEmptyValue(keyType)
