@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -122,7 +123,10 @@ func main() {
 						isPointer = true
 					}
 
-					appendSerializedItemFuncInvocation, emptyValue := getTypeToSerializerAndEmptyValue(fieldType)
+					appendSerializedItemFuncInvocation, emptyValue, err := getTypeToSerializerAndEmptyValue(fieldType, false)
+					if err != nil {
+						log.Fatal(fmt.Errorf("[error] failed to generate code: %w", err))
+					}
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(
@@ -236,27 +240,36 @@ func getDereferenceSigil(isPointer bool) string {
 	return ""
 }
 
-func getTypeToSerializerAndEmptyValue(typ string) (string, string) {
+func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, string, error) {
 	switch typ {
 	case "bool":
-		return "serializer.AppendSerializedBool(buff, %s)", "false"
+		return "serializer.AppendSerializedBool(buff, %s)", "false", nil
 	case "int", "int8", "int16", "int32", "int64":
-		return "serializer.AppendSerializedInt(buff, int64(%s))", "0"
+		return "serializer.AppendSerializedInt(buff, int64(%s))", "0", nil
 	case "uint", "uint8", "uint16", "uint32", "uint64":
-		return "serializer.AppendSerializedUint(buff, uint64(%s))", "0"
+		return "serializer.AppendSerializedUint(buff, uint64(%s))", "0", nil
 	case "float32", "float64":
-		return "serializer.AppendSerializedFloat(buff, float64(%s))", "0"
+		return "serializer.AppendSerializedFloat(buff, float64(%s))", "0", nil
 	case "string":
-		return "serializer.AppendSerializedString(buff, %s)", `""`
+		return "serializer.AppendSerializedString(buff, %s)", `""`, nil
 	default:
+		if isMapKey {
+			return "", "", errors.New("prohibited using non-primitive type value for map key")
+		}
 		// map type
 		if matched := regexp.MustCompile("^map\\[([^]]+)](.+)").FindStringSubmatch(typ); len(matched) >= 3 {
 			keyType := matched[1]
 			valueType := matched[2]
-			appendSerializedMapKeyTypeInvocation, _ := getTypeToSerializerAndEmptyValue(keyType)
-			appendSerializedMapValueTypeInvocation, _ := getTypeToSerializerAndEmptyValue(valueType)
+			appendSerializedMapKeyTypeInvocation, _, err := getTypeToSerializerAndEmptyValue(keyType, true)
+			if err != nil {
+				return "", "", err
+			}
+			appendSerializedMapValueTypeInvocation, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
+			if err != nil {
+				return "", "", err
+			}
 
-			code, _ := g.NewRoot( // TODO error handling
+			code, err := g.NewRoot( // TODO error handling
 				g.NewRawStatement("append(buff, '{')"), // XXX caller must have `buff = ` previously
 				g.NewFor(
 					"mapKey, mapValue := range %s",
@@ -284,7 +297,10 @@ func getTypeToSerializerAndEmptyValue(typ string) (string, string) {
 				g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
 					Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
 			).Generate(0)
-			return code, "nil" // TODO handle omitempty
+			if err != nil {
+				return "", "", err
+			}
+			return code, "nil", nil // TODO
 		}
 
 		panic("TODO")
