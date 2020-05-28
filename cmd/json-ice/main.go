@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -21,6 +22,8 @@ var (
 	typeName = flag.String("type", "", "[mandatory] a type name")
 	output   = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
 )
+
+var mapFieldTypeRe = regexp.MustCompile("^map\\[([^]]+)](.+)")
 
 func main() {
 	flag.Parse()
@@ -121,26 +124,12 @@ func main() {
 						isPointer = true
 					}
 
-					emptyValue := ""
-					appendSerializedItemFuncInvocation := ""
-					switch fieldType {
-					case "bool":
-						appendSerializedItemFuncInvocation = "serializer.AppendSerializedBool(buff, %s)"
-						emptyValue = "false"
-					case "int", "int8", "int16", "int32", "int64":
-						appendSerializedItemFuncInvocation = "serializer.AppendSerializedInt(buff, int64(%s))"
-						emptyValue = "0"
-					case "uint", "uint8", "uint16", "uint32", "uint64":
-						appendSerializedItemFuncInvocation = "serializer.AppendSerializedUint(buff, uint64(%s))"
-						emptyValue = "0"
-					case "float32", "float64":
-						appendSerializedItemFuncInvocation = "serializer.AppendSerializedFloat(buff, float64(%s))"
-						emptyValue = "0"
-					case "string":
-						appendSerializedItemFuncInvocation = "serializer.AppendSerializedString(buff, %s)"
-						emptyValue = `""`
-					default:
-						panic("TODO")
+					appendSerializedItemFuncInvocation, emptyValue := getTypeToSerializerAndEmptyValue(fieldType)
+					appendSerializedMapKeyTypeInvocation := ""
+					appendSerializedMapValueTypeInvocation := ""
+					if matched := mapFieldTypeRe.FindStringSubmatch(fieldType); len(matched) >= 3 {
+						appendSerializedMapKeyTypeInvocation, _ = getTypeToSerializerAndEmptyValue(matched[1])
+						appendSerializedMapValueTypeInvocation, _ = getTypeToSerializerAndEmptyValue(matched[2])
 					}
 
 					buffWriteStmts := []g.Statement{
@@ -156,12 +145,49 @@ func main() {
 									g.NewRawStatement("buff = append(buff, '[')"),
 									g.NewFor(
 										fmt.Sprintf("_, v := range s.%s", fieldName),
-										g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, getDereferenceSigil(isPointer)+"v")),
-										g.NewRawStatement("buff = append(buff, ',')"),
+										func() []g.Statement {
+											if appendSerializedMapKeyTypeInvocation != "" && appendSerializedMapValueTypeInvocation != "" {
+												return []g.Statement{
+													g.NewRawStatement("buff = append(buff, '{')"),
+													g.NewFor(
+														"mapKey, mapValue := range v",
+														g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapKeyTypeInvocation, "mapKey")), // TODO quote
+														g.NewRawStatement("buff = append(buff, ':')"),
+														g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapValueTypeInvocation, "mapValue")),
+														g.NewRawStatement("buff = append(buff, ',')"),
+													),
+													// dealing with trailing comma
+													g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
+														Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
+													g.NewRawStatement("buff = append(buff, ',')"),
+												}
+											}
+											return []g.Statement{
+												g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, getDereferenceSigil(isPointer)+"v")),
+												g.NewRawStatement("buff = append(buff, ',')"),
+											}
+										}()...,
+
 									),
 									// dealing with trailing comma
 									g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = ']'")).
 										Else(g.NewElse(g.NewRawStatement("buff = append(buff, ']')"))),
+								}
+							}
+
+							if appendSerializedMapKeyTypeInvocation != "" && appendSerializedMapValueTypeInvocation != "" {
+								return []g.Statement{
+									g.NewRawStatement("buff = append(buff, '{')"),
+									g.NewFor(
+										fmt.Sprintf("mapKey, mapValue := range s.%s", fieldName),
+										g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapKeyTypeInvocation, "mapKey")), // TODO quote
+										g.NewRawStatement("buff = append(buff, ':')"),
+										g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedMapValueTypeInvocation, "mapValue")),
+										g.NewRawStatement("buff = append(buff, ',')"),
+									),
+									// dealing with trailing comma
+									g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
+										Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
 								}
 							}
 
@@ -248,4 +274,22 @@ func getDereferenceSigil(isPointer bool) string {
 		return "*"
 	}
 	return ""
+}
+
+func getTypeToSerializerAndEmptyValue(typ string) (string, string) {
+	switch typ {
+	case "bool":
+		return "serializer.AppendSerializedBool(buff, %s)", "false"
+	case "int", "int8", "int16", "int32", "int64":
+		return "serializer.AppendSerializedInt(buff, int64(%s))", "0"
+	case "uint", "uint8", "uint16", "uint32", "uint64":
+		return "serializer.AppendSerializedUint(buff, uint64(%s))", "0"
+	case "float32", "float64":
+		return "serializer.AppendSerializedFloat(buff, float64(%s))", "0"
+	case "string":
+		return "serializer.AppendSerializedString(buff, %s)", `""`
+	default:
+		return "TODO", "TODO"
+		//panic("TODO")
+	}
 }
