@@ -2,52 +2,57 @@
 
 package benchmark
 
-import "github.com/moznion/go-json-ice/serializer"
+import "strconv"
 
 func MarshalBasicTypesAsJSON(s *BasicTypes) ([]byte, error) {
 	buff := make([]byte, 1, 500)
 	buff[0] = '{'
 	buff = append(buff, "\"bool_value\":"...)
-	buff = serializer.AppendSerializedBool(buff, s.BoolValue)
+	if s.BoolValue {
+		buff = append(buff, "true"...)
+	} else {
+		buff = append(buff, "false"...)
+	}
+
 	buff = append(buff, ',')
 	buff = append(buff, "\"int_value\":"...)
-	buff = serializer.AppendSerializedInt(buff, int64(s.IntValue))
+	buff = strconv.AppendInt(buff, int64(s.IntValue), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"int8_value\":"...)
-	buff = serializer.AppendSerializedInt(buff, int64(s.Int8Value))
+	buff = strconv.AppendInt(buff, int64(s.Int8Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"int16_value\":"...)
-	buff = serializer.AppendSerializedInt(buff, int64(s.Int16Value))
+	buff = strconv.AppendInt(buff, int64(s.Int16Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"int32_value\":"...)
-	buff = serializer.AppendSerializedInt(buff, int64(s.Int32Value))
+	buff = strconv.AppendInt(buff, int64(s.Int32Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"int64_value\":"...)
-	buff = serializer.AppendSerializedInt(buff, int64(s.Int64Value))
+	buff = strconv.AppendInt(buff, int64(s.Int64Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"uint_value\":"...)
-	buff = serializer.AppendSerializedUint(buff, uint64(s.UintValue))
+	buff = strconv.AppendUint(buff, uint64(s.UintValue), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"uint8_value\":"...)
-	buff = serializer.AppendSerializedUint(buff, uint64(s.Uint8Value))
+	buff = strconv.AppendUint(buff, uint64(s.Uint8Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"uint16_value\":"...)
-	buff = serializer.AppendSerializedUint(buff, uint64(s.Uint16Value))
+	buff = strconv.AppendUint(buff, uint64(s.Uint16Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"uint32_value\":"...)
-	buff = serializer.AppendSerializedUint(buff, uint64(s.Uint32Value))
+	buff = strconv.AppendUint(buff, uint64(s.Uint32Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"uint64_value\":"...)
-	buff = serializer.AppendSerializedUint(buff, uint64(s.Uint64Value))
+	buff = strconv.AppendUint(buff, uint64(s.Uint64Value), 10)
 	buff = append(buff, ',')
 	buff = append(buff, "\"float32_value\":"...)
-	buff = serializer.AppendSerializedFloat(buff, float64(s.Float32Value))
+	buff = strconv.AppendFloat(buff, float64(s.Float32Value), 'e', -1, 64)
 	buff = append(buff, ',')
 	buff = append(buff, "\"float64_value\":"...)
-	buff = serializer.AppendSerializedFloat(buff, float64(s.Float64Value))
+	buff = strconv.AppendFloat(buff, float64(s.Float64Value), 'e', -1, 64)
 	buff = append(buff, ',')
 	buff = append(buff, "\"string_value\":"...)
-	buff = serializer.AppendSerializedString(buff, s.StringValue)
+	buff = strconv.AppendQuote(buff, s.StringValue)
 	buff = append(buff, ',')
 	if buff[len(buff)-1] == ',' {
 		buff[len(buff)-1] = '}'

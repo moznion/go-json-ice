@@ -2,7 +2,7 @@
 
 package tests
 
-import "github.com/moznion/go-json-ice/serializer"
+import "strconv"
 
 func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 	buff := make([]byte, 1, 500)
@@ -13,9 +13,9 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 		buff = append(buff, "\"map\":"...)
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.Map {
-			buff = serializer.AppendSerializedString(buff, mapKey)
+			buff = strconv.AppendQuote(buff, mapKey)
 			buff = append(buff, ':')
-			buff = serializer.AppendSerializedString(buff, mapValue)
+			buff = strconv.AppendQuote(buff, mapValue)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -37,9 +37,9 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 			} else {
 				buff = append(buff, '{')
 				for mapKey, mapValue := range v {
-					buff = serializer.AppendSerializedString(buff, mapKey)
+					buff = strconv.AppendQuote(buff, mapKey)
 					buff = append(buff, ':')
-					buff = serializer.AppendSerializedString(buff, mapValue)
+					buff = strconv.AppendQuote(buff, mapValue)
 					buff = append(buff, ',')
 				}
 				if buff[len(buff)-1] == ',' {
@@ -65,16 +65,16 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 		buff = append(buff, "\"nested_map\":"...)
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.NestedMap {
-			buff = serializer.AppendSerializedString(buff, mapKey)
+			buff = strconv.AppendQuote(buff, mapKey)
 			buff = append(buff, ':')
 			if mapValue == nil {
 				buff = append(buff, "null"...)
 			} else {
 				buff = append(buff, '{')
 				for mapKey, mapValue := range mapValue {
-					buff = serializer.AppendSerializedString(buff, mapKey)
+					buff = strconv.AppendQuote(buff, mapKey)
 					buff = append(buff, ':')
-					buff = serializer.AppendSerializedString(buff, mapValue)
+					buff = strconv.AppendQuote(buff, mapValue)
 					buff = append(buff, ',')
 				}
 				if buff[len(buff)-1] == ',' {
@@ -101,10 +101,10 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.IntKeyMap {
 			buff = append(buff, '"')
-			buff = serializer.AppendSerializedInt(buff, int64(mapKey))
+			buff = strconv.AppendInt(buff, int64(mapKey), 10)
 			buff = append(buff, '"')
 			buff = append(buff, ':')
-			buff = serializer.AppendSerializedString(buff, mapValue)
+			buff = strconv.AppendQuote(buff, mapValue)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -121,14 +121,14 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 		buff = append(buff, "\"slice_value_map\":"...)
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.SliceValueMap {
-			buff = serializer.AppendSerializedString(buff, mapKey)
+			buff = strconv.AppendQuote(buff, mapKey)
 			buff = append(buff, ':')
 			if mapValue == nil {
 				buff = append(buff, "null"...)
 			} else {
 				buff = append(buff, '[')
 				for _, v := range mapValue {
-					buff = serializer.AppendSerializedString(buff, v)
+					buff = strconv.AppendQuote(buff, v)
 					buff = append(buff, ',')
 				}
 				if buff[len(buff)-1] == ',' {
@@ -154,12 +154,12 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 		buff = append(buff, "\"pointer_value_map\":"...)
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.PointerValueMap {
-			buff = serializer.AppendSerializedString(buff, mapKey)
+			buff = strconv.AppendQuote(buff, mapKey)
 			buff = append(buff, ':')
 			if mapValue == nil {
 				buff = append(buff, "null"...)
 			} else {
-				buff = serializer.AppendSerializedString(buff, *mapValue)
+				buff = strconv.AppendQuote(buff, *mapValue)
 			}
 			buff = append(buff, ',')
 		}
@@ -177,9 +177,9 @@ func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
 		buff = append(buff, "\"null_map\":"...)
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.NullMap {
-			buff = serializer.AppendSerializedString(buff, mapKey)
+			buff = strconv.AppendQuote(buff, mapKey)
 			buff = append(buff, ':')
-			buff = serializer.AppendSerializedString(buff, mapValue)
+			buff = strconv.AppendQuote(buff, mapValue)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
