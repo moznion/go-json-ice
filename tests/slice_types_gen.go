@@ -2,7 +2,7 @@
 
 package tests
 
-import "github.com/moznion/go-json-ice/serializer"
+import "strconv"
 
 func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 	buff := make([]byte, 1, 500)
@@ -13,7 +13,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"string_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.StringSlice {
-			buff = serializer.AppendSerializedString(buff, v)
+			buff = strconv.AppendQuote(buff, v)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -21,6 +21,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		} else {
 			buff = append(buff, ']')
 		}
+
 		buff = append(buff, ',')
 	}
 	if s.StringPointerSlice == nil {
@@ -29,7 +30,11 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"string_pointer_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.StringPointerSlice {
-			buff = serializer.AppendSerializedString(buff, *v)
+			if v == nil {
+				buff = append(buff, "null"...)
+			} else {
+				buff = strconv.AppendQuote(buff, *v)
+			}
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -37,6 +42,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		} else {
 			buff = append(buff, ']')
 		}
+
 		buff = append(buff, ',')
 	}
 	if s.EmptySlice == nil {
@@ -45,7 +51,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"empty_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.EmptySlice {
-			buff = serializer.AppendSerializedString(buff, v)
+			buff = strconv.AppendQuote(buff, v)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -53,6 +59,24 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		} else {
 			buff = append(buff, ']')
 		}
+
+		buff = append(buff, ',')
+	}
+	if s.NullSlice == nil {
+		buff = append(buff, "\"null_slice\":null,"...)
+	} else {
+		buff = append(buff, "\"null_slice\":"...)
+		buff = append(buff, '[')
+		for _, v := range s.NullSlice {
+			buff = strconv.AppendQuote(buff, v)
+			buff = append(buff, ',')
+		}
+		if buff[len(buff)-1] == ',' {
+			buff[len(buff)-1] = ']'
+		} else {
+			buff = append(buff, ']')
+		}
+
 		buff = append(buff, ',')
 	}
 	if buff[len(buff)-1] == ',' {

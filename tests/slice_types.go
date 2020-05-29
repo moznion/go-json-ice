@@ -5,4 +5,5 @@ type SliceTypes struct {
 	StringSlice        []string  `json:"string_slice"`
 	StringPointerSlice []*string `json:"string_pointer_slice"`
 	EmptySlice         []string  `json:"empty_slice"`
+	NullSlice          []string  `json:"null_slice"`
 }
