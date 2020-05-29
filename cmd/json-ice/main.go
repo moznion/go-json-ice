@@ -27,11 +27,31 @@ var (
 type kind uint8
 
 const (
-	primitiveKind kind = iota
+	boolKind kind = iota
+	numKind
+	stringKind
 	sliceKind
 	mapKind
 	noneKind
 )
+
+var kind2EmptyValue = map[kind]string{
+	boolKind:   "false",
+	numKind:    "0",
+	stringKind: `""`,
+}
+
+type nillable uint8
+
+const (
+	nonNil nillable = iota
+	nillablePointer
+	nillableSliceOrMap
+)
+
+func (n nillable) isNillable() bool {
+	return n != nonNil
+}
 
 func main() {
 	flag.Parse()
@@ -120,28 +140,26 @@ func main() {
 						}
 					}
 
-					appendSerializedItemFuncInvocation, isPointer, isNillable, fieldKind, emptyValue, err := getTypeToSerializerAndEmptyValue(fieldType, false)
+					appendSerializedItemFuncInvocation, nillable, fieldKind, err := getTypeToSerializerAndEmptyValue(fieldType, false)
 					if err != nil {
 						log.Fatal(fmt.Errorf("[error] failed to generate code: %w", err))
 					}
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(`buff = append(buff, "\"%s\":"...)`, jsonPropertyName),
-						g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(isPointer), fieldName))),
+						g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(nillable == nillablePointer), fieldName))),
 						g.NewRawStatement(`buff = append(buff, ',')`),
 					}
 
-					nonEmptyValueCondition := fmt.Sprintf("s.%s != %s", fieldName, emptyValue)
+					nonEmptyValueCondition := fmt.Sprintf("s.%s != %s", fieldName, kind2EmptyValue[fieldKind])
 					isNilCondition := ""
-					if isNillable {
-						// non-empty
-						if fieldKind == sliceKind || fieldKind == mapKind {
-							isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
-							nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && len(s.%s) > 0", fieldName, fieldName)
-						} else if isPointer {
-							isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
-							nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, emptyValue)
-						}
+					switch nillable {
+					case nillablePointer:
+						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, kind2EmptyValue[fieldKind])
+					case nillableSliceOrMap:
+						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && len(s.%s) > 0", fieldName, fieldName)
 					}
 
 					if isOmitEmpty {
@@ -214,36 +232,36 @@ func getDereferenceSigil(isPointer bool) string {
 	return ""
 }
 
-func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, bool, bool, kind, string, error) {
-	isPointer := false
+func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, nillable, kind, error) {
+	nillable := nonNil
 	if strings.HasPrefix(typ, "*") {
 		typ = strings.Replace(typ, "*", "", 1)
-		isPointer = true
+		nillable = nillablePointer
 	}
 
 	switch typ {
 	case "bool":
-		return "serializer.AppendSerializedBool(buff, %s)", isPointer, isPointer, primitiveKind, "false", nil
+		return "serializer.AppendSerializedBool(buff, %s)", nillable, boolKind, nil
 	case "int", "int8", "int16", "int32", "int64":
-		return "serializer.AppendSerializedInt(buff, int64(%s))", isPointer, isPointer, primitiveKind, "0", nil
+		return "serializer.AppendSerializedInt(buff, int64(%s))", nillable, numKind, nil
 	case "uint", "uint8", "uint16", "uint32", "uint64":
-		return "serializer.AppendSerializedUint(buff, uint64(%s))", isPointer, isPointer, primitiveKind, "0", nil
+		return "serializer.AppendSerializedUint(buff, uint64(%s))", nillable, numKind, nil
 	case "float32", "float64":
-		return "serializer.AppendSerializedFloat(buff, float64(%s))", isPointer, isPointer, primitiveKind, "0", nil
+		return "serializer.AppendSerializedFloat(buff, float64(%s))", nillable, numKind, nil
 	case "string":
-		return "serializer.AppendSerializedString(buff, %s)", isPointer, isPointer, primitiveKind, `""`, nil
+		return "serializer.AppendSerializedString(buff, %s)", nillable, stringKind, nil
 	default:
 		if isMapKey {
-			return "", false, false, noneKind, "", errors.New("prohibited using non-primitive type value for map key")
+			return "", nonNil, noneKind, errors.New("prohibited using non-primitive type value for map key")
 		}
 
 		// slice type
 		if matched := regexp.MustCompile("^\\[](.+)").FindStringSubmatch(typ); len(matched) >= 2 {
 			valueType := matched[1]
 
-			appendSerializedValueFuncInvocation, isPointer, isNillable, _, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
+			appendSerializedValueFuncInvocation, nillable, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
 			if err != nil {
-				return "", false, false, noneKind, "", err
+				return "", nonNil, noneKind, err
 			}
 
 			code, err := g.NewRoot(
@@ -251,15 +269,15 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, bool, 
 				g.NewFor(
 					"_, v := range %s",
 					func() g.Statement {
-						if isNillable {
+						if nillable.isNillable() {
 							return g.NewIf(
 								"v == nil",
 								g.NewRawStatement(`buff = append(buff, "null"...)`),
 							).Else(g.NewElse(
-								g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedValueFuncInvocation, getDereferenceSigil(isPointer)+"v")),
+								g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedValueFuncInvocation, getDereferenceSigil(nillable == nillablePointer)+"v")),
 							))
 						}
-						return g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedValueFuncInvocation, getDereferenceSigil(isPointer)+"v"))
+						return g.NewRawStatementf("buff = %s", fmt.Sprintf(appendSerializedValueFuncInvocation, getDereferenceSigil(nillable == nillablePointer)+"v"))
 					}(),
 					g.NewRawStatement("buff = append(buff, ',')"),
 				),
@@ -268,22 +286,22 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, bool, 
 					Else(g.NewElse(g.NewRawStatement("buff = append(buff, ']')"))),
 			).Generate(0)
 			if err != nil {
-				return "", false, false, noneKind, "", err
+				return "", nonNil, noneKind, err
 			}
-			return code, false, true, sliceKind, "TODO", nil
+			return code, nillableSliceOrMap, sliceKind, nil
 		}
 
 		// map type
 		if matched := regexp.MustCompile("^map\\[([^]]+)](.+)").FindStringSubmatch(typ); len(matched) >= 3 {
 			keyType := matched[1]
 			valueType := matched[2]
-			appendSerializedMapKeyTypeInvocation, isKeyPointer, _, _, _, err := getTypeToSerializerAndEmptyValue(keyType, true)
+			appendSerializedMapKeyTypeInvocation, keyNillable, _, err := getTypeToSerializerAndEmptyValue(keyType, true)
 			if err != nil {
-				return "", false, false, noneKind, "", err
+				return "", nonNil, noneKind, err
 			}
-			appendSerializedMapValueTypeInvocation, isValuePointer, isValueNillable, _, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
+			appendSerializedMapValueTypeInvocation, valueNillable, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
 			if err != nil {
-				return "", false, false, noneKind, "", err
+				return "", nonNil, noneKind, err
 			}
 
 			code, err := g.NewRoot(
@@ -294,29 +312,29 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, bool, 
 						if keyType == "string" {
 							// key has been already quoted
 							return []g.Statement{
-								g.NewRawStatementf("buff = "+appendSerializedMapKeyTypeInvocation, getDereferenceSigil(isKeyPointer)+"mapKey"),
+								g.NewRawStatementf("buff = "+appendSerializedMapKeyTypeInvocation, getDereferenceSigil(keyNillable == nillablePointer)+"mapKey"),
 							}
 						}
 
 						// quote the key manually
 						return []g.Statement{
 							g.NewRawStatement(`buff = append(buff, '"')`),
-							g.NewRawStatementf(`buff = `+appendSerializedMapKeyTypeInvocation, getDereferenceSigil(isKeyPointer)+"mapKey"),
+							g.NewRawStatementf(`buff = `+appendSerializedMapKeyTypeInvocation, getDereferenceSigil(keyNillable == nillablePointer)+"mapKey"),
 							g.NewRawStatement(`buff = append(buff, '"')`),
 						}
 					}()...,
 				).AddStatements(
 					g.NewRawStatement("buff = append(buff, ':')"),
 					func() g.Statement {
-						if isValueNillable {
+						if valueNillable.isNillable() {
 							return g.NewIf(
 								"mapValue == nil",
 								g.NewRawStatement(`buff = append(buff, "null"...)`),
 							).Else(g.NewElse(
-								g.NewRawStatementf("buff = "+appendSerializedMapValueTypeInvocation, getDereferenceSigil(isValuePointer)+"mapValue"),
+								g.NewRawStatementf("buff = "+appendSerializedMapValueTypeInvocation, getDereferenceSigil(valueNillable == nillablePointer)+"mapValue"),
 							))
 						}
-						return g.NewRawStatementf("buff = "+appendSerializedMapValueTypeInvocation, getDereferenceSigil(isValuePointer)+"mapValue")
+						return g.NewRawStatementf("buff = "+appendSerializedMapValueTypeInvocation, getDereferenceSigil(valueNillable == nillablePointer)+"mapValue")
 					}(),
 				).AddStatements(
 					g.NewRawStatement("buff = append(buff, ',')"),
@@ -326,9 +344,9 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, bool, 
 					Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
 			).Generate(0)
 			if err != nil {
-				return "", false, false, noneKind, "", err
+				return "", nonNil, noneKind, err
 			}
-			return code, false, true, mapKind, "TODO", nil
+			return code, nillableSliceOrMap, mapKind, nil
 		}
 
 		panic("TODO")
