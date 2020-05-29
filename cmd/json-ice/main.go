@@ -49,6 +49,8 @@ const (
 	nillableSliceOrMap
 )
 
+const defaultCapScore = 20 // XXX: not confident
+
 func (n nillable) isNillable() bool {
 	return n != nonNil
 }
@@ -114,10 +116,11 @@ func main() {
 				funcStmt := g.NewFunc(
 					nil,
 					funcSignature,
-					g.NewRawStatement(`buff := make([]byte, 1, 500)`), // TODO calc cap size
-					g.NewRawStatement(`buff[0] = '{'`),
 				)
 
+				stmts := make([]g.Statement, 0)
+
+				capScoreSum := int64(2) // len of envelope `{}`
 				for _, field := range structType.Fields.List {
 					fieldName := field.Names[0].Name
 					fieldType := types.ExprString(field.Type)
@@ -128,6 +131,7 @@ func main() {
 						// no json field
 						continue
 					}
+					capScoreSum += defaultCapScore
 					jsonPropertyName := jsonTagValues[0]
 
 					isOmitEmpty := false
@@ -158,12 +162,13 @@ func main() {
 						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
 						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, kind2EmptyValue[fieldKind])
 					case nillableSliceOrMap:
+						capScoreSum += 20 // XXX add extra score if the field is slice or map
 						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
 						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && len(s.%s) > 0", fieldName, fieldName)
 					}
 
 					if isOmitEmpty {
-						funcStmt = funcStmt.AddStatements(g.NewIf(nonEmptyValueCondition, buffWriteStmts...))
+						stmts = append(stmts, g.NewIf(nonEmptyValueCondition, buffWriteStmts...))
 					} else {
 						stmt := buffWriteStmts
 						if isNilCondition != "" {
@@ -175,11 +180,12 @@ func main() {
 								),
 							).Else(g.NewElse(buffWriteStmts...))}
 						}
-						funcStmt = funcStmt.AddStatements(stmt...)
+						stmts = append(stmts, stmt...)
 					}
 				}
 
-				funcStmt = funcStmt.AddStatements(
+				stmts = append(
+					stmts,
 					// dealing with trailing comma
 					g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
 						Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
@@ -187,7 +193,14 @@ func main() {
 					g.NewReturnStatement("buff, nil"),
 				)
 
-				rootStmt = rootStmt.AddStatements(funcStmt)
+				rootStmt = rootStmt.AddStatements(
+					funcStmt.AddStatements(
+						g.NewRawStatementf("buff := make([]byte, 1, %d)", int64(float64(capScoreSum) * 1.3)),
+						g.NewRawStatement("buff[0] = '{'"),
+					).AddStatements(
+						stmts...,
+					),
+				)
 			}
 		}
 	}

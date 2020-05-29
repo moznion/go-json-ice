@@ -5,7 +5,7 @@ package tests
 import "strconv"
 
 func MarshalOmitemptyPointerStructAsJSON(s *OmitemptyPointerStruct) ([]byte, error) {
-	buff := make([]byte, 1, 500)
+	buff := make([]byte, 1, 262)
 	buff[0] = '{'
 	if s.EmptyBool != nil && *s.EmptyBool != false {
 		buff = append(buff, "\"empty_bool\":"...)

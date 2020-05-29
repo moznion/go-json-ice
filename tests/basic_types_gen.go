@@ -5,7 +5,7 @@ package tests
 import "strconv"
 
 func MarshalBasicTypesAsJSON(s *BasicTypes) ([]byte, error) {
-	buff := make([]byte, 1, 500)
+	buff := make([]byte, 1, 366)
 	buff[0] = '{'
 	buff = append(buff, "\"bool_value\":"...)
 	if s.BoolValue {

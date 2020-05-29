@@ -5,7 +5,7 @@ package tests
 import "strconv"
 
 func MarshalMapTypesAsJSON(s *MapTypes) ([]byte, error) {
-	buff := make([]byte, 1, 500)
+	buff := make([]byte, 1, 366)
 	buff[0] = '{'
 	if s.Map == nil {
 		buff = append(buff, "\"map\":null,"...)

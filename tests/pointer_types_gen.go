@@ -5,7 +5,7 @@ package tests
 import "strconv"
 
 func MarshalPointerTypesAsJSON(s *PointerTypes) ([]byte, error) {
-	buff := make([]byte, 1, 500)
+	buff := make([]byte, 1, 366)
 	buff[0] = '{'
 	if s.BoolValue == nil {
 		buff = append(buff, "\"bool_value\":null,"...)

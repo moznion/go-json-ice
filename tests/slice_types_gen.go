@@ -5,7 +5,7 @@ package tests
 import "strconv"
 
 func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
-	buff := make([]byte, 1, 500)
+	buff := make([]byte, 1, 210)
 	buff[0] = '{'
 	if s.StringSlice == nil {
 		buff = append(buff, "\"string_slice\":null,"...)
