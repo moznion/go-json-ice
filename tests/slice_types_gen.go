@@ -21,6 +21,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		} else {
 			buff = append(buff, ']')
 		}
+
 		buff = append(buff, ',')
 	}
 	if s.StringPointerSlice == nil {
@@ -29,7 +30,11 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"string_pointer_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.StringPointerSlice {
-			buff = serializer.AppendSerializedString(buff, *v)
+			if v == nil {
+				buff = append(buff, "null"...)
+			} else {
+				buff = serializer.AppendSerializedString(buff, *v)
+			}
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -37,6 +42,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		} else {
 			buff = append(buff, ']')
 		}
+
 		buff = append(buff, ',')
 	}
 	if s.EmptySlice == nil {
@@ -53,6 +59,24 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		} else {
 			buff = append(buff, ']')
 		}
+
+		buff = append(buff, ',')
+	}
+	if s.NullSlice == nil {
+		buff = append(buff, "\"null_slice\":null,"...)
+	} else {
+		buff = append(buff, "\"null_slice\":"...)
+		buff = append(buff, '[')
+		for _, v := range s.NullSlice {
+			buff = serializer.AppendSerializedString(buff, v)
+			buff = append(buff, ',')
+		}
+		if buff[len(buff)-1] == ',' {
+			buff[len(buff)-1] = ']'
+		} else {
+			buff = append(buff, ']')
+		}
+
 		buff = append(buff, ',')
 	}
 	if buff[len(buff)-1] == ',' {

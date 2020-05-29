@@ -44,6 +44,24 @@ func MarshalOmitemptyPointerStructAsJSON(s *OmitemptyPointerStruct) ([]byte, err
 		} else {
 			buff = append(buff, ']')
 		}
+
+		buff = append(buff, ',')
+	}
+	if s.EmptyMap != nil && len(s.EmptyMap) > 0 {
+		buff = append(buff, "\"empty_map\":"...)
+		buff = append(buff, '{')
+		for mapKey, mapValue := range s.EmptyMap {
+			buff = serializer.AppendSerializedString(buff, mapKey)
+			buff = append(buff, ':')
+			buff = serializer.AppendSerializedString(buff, mapValue)
+			buff = append(buff, ',')
+		}
+		if buff[len(buff)-1] == ',' {
+			buff[len(buff)-1] = '}'
+		} else {
+			buff = append(buff, '}')
+		}
+
 		buff = append(buff, ',')
 	}
 	if s.NotEmptyString == nil {

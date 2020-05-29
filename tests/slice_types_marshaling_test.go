@@ -13,12 +13,13 @@ func TestMarshalSliceTypes(t *testing.T) {
 
 	s1 := "hoge"
 	s2 := "fuga"
-	stringPointerSlice := []*string{&s1, &s2}
+	stringPointerSlice := []*string{&s1, &s2, nil}
 
 	given := &SliceTypes{
 		StringSlice:        stringSlice,
 		StringPointerSlice: stringPointerSlice,
 		EmptySlice:         []string{},
+		NullSlice:          nil,
 	}
 
 	serialized, err := MarshalSliceTypesAsJSON(given)

@@ -44,6 +44,7 @@ func TestOmitemptyPointerWithNullValues(t *testing.T) {
 		EmptyFloat:     nil,
 		EmptyString:    nil,
 		EmptySlice:     nil,
+		EmptyMap:       nil,
 		NotEmptyString: nil,
 	}
 
@@ -70,6 +71,7 @@ func TestOmitemptyPointerWithEmptyValues(t *testing.T) {
 		EmptyFloat:     &emptyFloat,
 		EmptyString:    &emptyString,
 		EmptySlice:     []string{},
+		EmptyMap:       map[string]string{},
 		NotEmptyString: &notEmptyString,
 	}
 
