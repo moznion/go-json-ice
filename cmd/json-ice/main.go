@@ -140,14 +140,14 @@ func main() {
 						}
 					}
 
-					appendSerializedItemFuncInvocation, nillable, fieldKind, err := getTypeToSerializerAndEmptyValue(fieldType, false)
+					appendSerializedItemFuncInvocation, nillable, fieldKind, err := getSerializedValueFuncInvocationCode(fieldType, false)
 					if err != nil {
 						log.Fatal(fmt.Errorf("[error] failed to generate code: %w", err))
 					}
 
 					buffWriteStmts := []g.Statement{
 						g.NewRawStatementf(`buff = append(buff, "\"%s\":"...)`, jsonPropertyName),
-						g.NewRawStatementf(fmt.Sprintf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(nillable == nillablePointer), fieldName))), // TODO
+						g.NewRawStatementf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(nillable == nillablePointer), fieldName)),
 						g.NewRawStatement(`buff = append(buff, ',')`),
 					}
 
@@ -232,7 +232,7 @@ func getDereferenceSigil(isPointer bool) string {
 	return ""
 }
 
-func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, nillable, kind, error) {
+func getSerializedValueFuncInvocationCode(typ string, isMapKey bool) (string, nillable, kind, error) {
 	nillable := nonNil
 	if strings.HasPrefix(typ, "*") {
 		typ = strings.Replace(typ, "*", "", 1)
@@ -268,7 +268,7 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, nillab
 		if matched := regexp.MustCompile("^\\[](.+)").FindStringSubmatch(typ); len(matched) >= 2 {
 			valueType := matched[1]
 
-			appendSerializedValueFuncInvocation, nillable, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
+			appendSerializedValueFuncInvocation, nillable, _, err := getSerializedValueFuncInvocationCode(valueType, false)
 			if err != nil {
 				return "", nonNil, noneKind, err
 			}
@@ -283,10 +283,10 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, nillab
 								"v == nil",
 								g.NewRawStatement(`buff = append(buff, "null"...)`),
 							).Else(g.NewElse(
-								g.NewRawStatementf(fmt.Sprintf(appendSerializedValueFuncInvocation, getDereferenceSigil(nillable == nillablePointer)+"v")), // TODO
+								g.NewRawStatementf(appendSerializedValueFuncInvocation, getDereferenceSigil(nillable == nillablePointer)+"v"),
 							))
 						}
-						return g.NewRawStatementf(fmt.Sprintf(appendSerializedValueFuncInvocation, getDereferenceSigil(nillable == nillablePointer)+"v")) // TODO
+						return g.NewRawStatementf(appendSerializedValueFuncInvocation, getDereferenceSigil(nillable == nillablePointer)+"v")
 					}(),
 					g.NewRawStatement("buff = append(buff, ',')"),
 				),
@@ -304,11 +304,11 @@ func getTypeToSerializerAndEmptyValue(typ string, isMapKey bool) (string, nillab
 		if matched := regexp.MustCompile("^map\\[([^]]+)](.+)").FindStringSubmatch(typ); len(matched) >= 3 {
 			keyType := matched[1]
 			valueType := matched[2]
-			appendSerializedMapKeyTypeInvocation, keyNillable, _, err := getTypeToSerializerAndEmptyValue(keyType, true)
+			appendSerializedMapKeyTypeInvocation, keyNillable, _, err := getSerializedValueFuncInvocationCode(keyType, true)
 			if err != nil {
 				return "", nonNil, noneKind, err
 			}
-			appendSerializedMapValueTypeInvocation, valueNillable, _, err := getTypeToSerializerAndEmptyValue(valueType, false)
+			appendSerializedMapValueTypeInvocation, valueNillable, _, err := getSerializedValueFuncInvocationCode(valueType, false)
 			if err != nil {
 				return "", nonNil, noneKind, err
 			}
