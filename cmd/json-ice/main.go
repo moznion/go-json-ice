@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	typeName = flag.String("type", "", "[mandatory] a type name")
-	output   = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
+	typeName     = flag.String("type", "", "[mandatory] a type name")
+	output       = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
+	givenCapSize = flag.Int64("cap-size", 0, `[optional] a cap-size of a byte slice buffer for marshaling; by default, it calculates this value automatically`)
 )
 
 type kind uint8
@@ -207,7 +208,12 @@ func main() {
 
 				rootStmt = rootStmt.AddStatements(
 					funcStmt.AddStatements(
-						g.NewRawStatementf("buff := make([]byte, 1, %d)", int64(float64(capScoreSum)*1.3)),
+						g.NewRawStatementf("buff := make([]byte, 1, %d)", func() int64 {
+							if *givenCapSize > 0 {
+								return *givenCapSize
+							}
+							return int64(float64(capScoreSum) * 1.3)
+						}()),
 						g.NewRawStatement("buff[0] = '{'"),
 					).AddStatements(
 						stmts...,
