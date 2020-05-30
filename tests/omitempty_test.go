@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"encoding/json"
 	"log"
 	"testing"
 
@@ -81,4 +82,32 @@ func TestOmitemptyPointerWithEmptyValues(t *testing.T) {
 	log.Printf("[debug] %s", serialized)
 
 	assert.Equal(t, `{"not_empty_string":""}`, string(serialized))
+}
+
+func TestOmitemptyWithEmptyStruct(t *testing.T) {
+	given := &OmitemptyStruct{}
+
+	serialized, err := MarshalOmitemptyStructAsJSON(given)
+	assert.NoError(t, err)
+
+	log.Printf("[debug] %s", serialized)
+
+	var got OmitemptyStruct
+	err = json.Unmarshal(serialized, &got)
+	assert.NoError(t, err)
+	assert.EqualValues(t, *given, got)
+}
+
+func TestOmitemptyPointerWithEmptyStruct(t *testing.T) {
+	given := &OmitemptyPointerStruct{}
+
+	serialized, err := MarshalOmitemptyPointerStructAsJSON(given)
+	assert.NoError(t, err)
+
+	log.Printf("[debug] %s", serialized)
+
+	var got OmitemptyPointerStruct
+	err = json.Unmarshal(serialized, &got)
+	assert.NoError(t, err)
+	assert.EqualValues(t, *given, got)
 }
