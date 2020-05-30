@@ -31,7 +31,7 @@ jobs:
         sudo dpkg -i /tmp/tinygo_0.13.1_amd64.deb
 
     - name: Do test
-      run: make test
+      run: make check
       env:
         GOPATH: /home/runner/work/go-json-ice/go
 

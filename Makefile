@@ -1,7 +1,18 @@
-test: build4test gen
+PKGS := $(shell go list ./...)
+PKGS_WITHOUT_TEST := $(shell go list ./... | grep -v "tests" | grep -v "benchmark")
+
+check: test lint vet fmt-check
+
+build4test:
+	go build -o dist/json-ice_test cmd/json-ice/main.go
+
+gen4test:
+	go generate ./...
+
+test: build4test gen4test
 	go test -v ./...
 
-bench: build4test gen
+bench: build4test gen4test
 	@(cd benchmark && \
 		../dist/json-ice_test --type=BasicTypes && \
 		echo "=== auto capsize ===" && \
@@ -11,11 +22,11 @@ bench: build4test gen
 		echo "=== minimum capsize => 1 ===" && \
 		go test -bench . -benchmem)
 
-build4test:
-	go build -o dist/json-ice_test cmd/json-ice/main.go
+lint:
+	golint -set_exit_status $(PKGS_WITHOUT_TEST)
 
-gen:
-	go generate ./...
+vet:
+	go vet $(PKGS)
 
 fmt-check:
 	gofmt -l -s **/*.go | grep [^*][.]go$$; \
@@ -28,4 +39,7 @@ fmt-check:
 fmt:
 	gofmt -w -s **/*.go
 	goimports -w **/*.go
+
+clean:
+	rm -rf dist/json-ice*
 
