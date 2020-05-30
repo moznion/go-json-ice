@@ -4,6 +4,18 @@ Simple, minimal runtime dependencies and fast JSON marshaler for go/tinygo.
 
 The status of this library is under development. API and all other has the possibility of changing without notice.
 
+
+
+## Synopsis
+
+```
+
+```
+
+## How to install
+
+TBD
+
 ## Motivation
 
 ### for "restricted" tinygo environment
@@ -20,11 +32,11 @@ So this library has the following features:
 
 This library has only one dependency for now, `strconv`.
 
-## Synopsis
+## How it works
 
 TBD
 
-## How it works
+## Known issue
 
 TBD
 

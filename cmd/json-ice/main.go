@@ -23,6 +23,7 @@ var (
 	typeName     = flag.String("type", "", "[mandatory] a type name")
 	output       = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
 	givenCapSize = flag.Int64("cap-size", 0, `[optional] a cap-size of a byte slice buffer for marshaling; by default, it calculates this value automatically`)
+	version      = flag.Bool("version", false, `show version information`)
 )
 
 type kind uint8
@@ -60,8 +61,15 @@ func (n nillable) isNillable() bool {
 func main() {
 	flag.Parse()
 
+	if *version {
+		internal.ShowVersion()
+		os.Exit(0)
+	}
+
 	if *typeName == "" {
-		log.Fatal("[error] mandatory parameter `-type` is missing")
+		log.Print("[error] mandatory parameter `-type` is missing")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	args := flag.Args()

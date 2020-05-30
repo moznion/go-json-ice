@@ -1,18 +1,21 @@
 PKGS := $(shell go list ./...)
 PKGS_WITHOUT_TEST := $(shell go list ./... | grep -v "tests" | grep -v "benchmark")
+INTERNAL_PACKAGE=github.com/moznion/go-json-ice/internal
+REVISION=$(shell git rev-parse --verify HEAD)
 
 check: test lint vet fmt-check
 
 build4test:
-	go build -o dist/json-ice_test cmd/json-ice/main.go
+	go build -ldflags "-X $(INTERNAL_PACKAGE).rev=$(REVISION) -X $(INTERNAL_PACKAGE).ver=TESTING" \
+		-o dist/json-ice_test cmd/json-ice/main.go
 
-gen4test:
+gen:
 	go generate ./...
 
-test: build4test gen4test
+test: build4test gen
 	go test -v ./...
 
-bench: build4test gen4test
+bench: build4test gen
 	@(cd benchmark && \
 		../dist/json-ice_test --type=BasicTypes && \
 		echo "=== auto capsize ===" && \
