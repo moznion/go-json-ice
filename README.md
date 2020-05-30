@@ -100,7 +100,7 @@ PASS
 ok      github.com/moznion/go-json-ice/benchmark        4.287s
 ```
 
-`auto capsize` benchmarks it the default situation, and `minimum capsize` benchmarks it with the minimum cap-size (i.e. `1`).
+`auto capsize` benchmarks it the default situation, and `minimum capsize` benchmarks it with the minimum cap-size (i.e. in worst performance case: `1`).
 
 `make bench` command benchmarks the performance.
 
