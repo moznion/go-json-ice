@@ -1,4 +1,5 @@
 /dist/*
 !/dist/.gitkeep
 /benchmark/basic_types_gen.go
+/main.wasm
 

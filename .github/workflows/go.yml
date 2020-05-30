@@ -25,8 +25,16 @@ jobs:
       env:
         GOPATH: /home/runner/work/go-json-ice/go
 
+    - name: Get tinygo runtime
+      run: |
+        wget -P /tmp/ https://github.com/tinygo-org/tinygo/releases/download/v0.13.1/tinygo_0.13.1_amd64.deb
+        sudo dpkg -i /tmp/tinygo_0.13.1_amd64.deb
+
     - name: Do test
       run: make test
       env:
         GOPATH: /home/runner/work/go-json-ice/go
+
+    - name: Compile tinygo wasm; to check success or not
+      run: /usr/local/tinygo/bin/tinygo build -o main.wasm -target wasm ./tests/tinygo/main.go
 
