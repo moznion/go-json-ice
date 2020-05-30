@@ -37,4 +37,6 @@ jobs:
 
     - name: Compile tinygo wasm; to check success or not
       run: /usr/local/tinygo/bin/tinygo build -o main.wasm -target wasm ./tests/tinygo/main.go
+      env:
+        GOPATH: /home/runner/work/go-json-ice/go
 
