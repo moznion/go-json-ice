@@ -104,8 +104,6 @@ func main() {
 					continue
 				}
 
-				// TODO type alias support
-
 				structType, ok := typeSpec.Type.(*ast.StructType)
 				if !ok {
 					continue
