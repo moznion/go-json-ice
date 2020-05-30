@@ -146,6 +146,10 @@ func (f *Foo) MarshalJSON() ([]byte, error) {
 - it cannot marshal `named type` and `type alias` types automatically
   - if you would like to marshal such them, please implement `json.Marshaler` on the type as like as the above FAQ answer.
 
+## How to build binaries
+
+Binaries are built and uploaded by [goreleaser](https://goreleaser.com/). Please refer to the configuration file: [.goreleaser.yml](./.goreleaser.yml)
+
 ## Author
 
 moznion (<moznion@gmail.com>)

@@ -1,0 +1,38 @@
+project_name: go-json-ice
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  -
+    main: ./cmd/json-ice/main.go
+    ldflags:
+    - "-X github.com/moznion/go-json-ice/internal.rev={{ .FullCommit }}"
+    - "-X github.com/moznion/go-json-ice/internal.ver={{ .Version }}"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: desc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - '^:pencil:'
+
