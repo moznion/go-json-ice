@@ -29,6 +29,3 @@ fmt:
 	gofmt -w -s **/*.go
 	goimports -w **/*.go
 
-build_test_wasm_tinygo:
-	tinygo build -o main.wasm -target wasm ./tests/tinygo/main.go
-
