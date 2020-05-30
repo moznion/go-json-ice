@@ -37,7 +37,7 @@ type AwesomeStruct struct {
 then it generates a marshaler as `MarshalAwesomeStructAsJSON(s *AwesomeStruct) ([]byte, error)`; you can use that like the following:
 
 ```go
-marshaled, err := MarshalAwesomeStructAsJSON(&{
+marshaled, err := MarshalAwesomeStructAsJSON(&AwesomeStruct{
 	Foo: "buz",
 	Bar: "",
 })
