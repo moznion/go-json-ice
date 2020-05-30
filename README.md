@@ -110,7 +110,7 @@ ok      github.com/moznion/go-json-ice/benchmark        4.287s
 
 For example,
 
-```
+```go
 type Foo struct {
 	Hoge string `json:"hoge"`
 }
@@ -125,7 +125,7 @@ In this case, a marshaler for `Bar` tries to marshal `Foo` by `Foo.MarshalJSON()
 
 The easiest way to marshal the struct like the above is the follwoing:
 
-```
+```go
 //go:generate json-ice --type=Foo
 type Foo struct {
 	Hoge string `json:"hoge"`
