@@ -2,7 +2,7 @@
 
 package tests
 
-import "strconv"
+import "github.com/moznion/go-json-ice/serializer"
 
 func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 	buff := make([]byte, 1, 210)
@@ -13,7 +13,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"string_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.StringSlice {
-			buff = strconv.AppendQuote(buff, v)
+			buff = serializer.AppendSerializedString(buff, v)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -33,7 +33,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 			if v == nil {
 				buff = append(buff, "null"...)
 			} else {
-				buff = strconv.AppendQuote(buff, *v)
+				buff = serializer.AppendSerializedString(buff, *v)
 			}
 			buff = append(buff, ',')
 		}
@@ -51,7 +51,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"empty_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.EmptySlice {
-			buff = strconv.AppendQuote(buff, v)
+			buff = serializer.AppendSerializedString(buff, v)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -68,7 +68,7 @@ func MarshalSliceTypesAsJSON(s *SliceTypes) ([]byte, error) {
 		buff = append(buff, "\"null_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.NullSlice {
-			buff = strconv.AppendQuote(buff, v)
+			buff = serializer.AppendSerializedString(buff, v)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {

@@ -273,24 +273,15 @@ func getSerializedValueFuncInvocationCode(typ string, isMapKey bool) (string, ni
 
 	switch typ {
 	case "bool":
-		code, err := g.NewIf(
-			"%s",
-			g.NewRawStatement(`buff = append(buff, "true"...)`),
-		).Else(g.NewElse(
-			g.NewRawStatement(`buff = append(buff, "false"...)`),
-		)).Generate(0)
-		if err != nil {
-			return "", nonNil, noneKind, err
-		}
-		return code, nillable, boolKind, nil
+		return "buff = serializer.AppendSerializedBool(buff, %s)", nillable, boolKind, nil
 	case "int", "int8", "int16", "int32", "int64":
-		return "buff = strconv.AppendInt(buff, int64(%s), 10)", nillable, numKind, nil
+		return "buff = serializer.AppendSerializedInt(buff, int64(%s))", nillable, numKind, nil
 	case "uint", "uint8", "uint16", "uint32", "uint64":
-		return "buff = strconv.AppendUint(buff, uint64(%s), 10)", nillable, numKind, nil
+		return "buff = serializer.AppendSerializedUint(buff, uint64(%s))", nillable, numKind, nil
 	case "float32", "float64":
-		return "buff = strconv.AppendFloat(buff, float64(%s), 'e', -1, 64)", nillable, numKind, nil
+		return "buff = serializer.AppendSerializedFloat(buff, float64(%s))", nillable, numKind, nil
 	case "string":
-		return "buff = strconv.AppendQuote(buff, %s)", nillable, stringKind, nil
+		return "buff = serializer.AppendSerializedString(buff, %s)", nillable, stringKind, nil
 	default:
 		if isMapKey {
 			return "", nonNil, noneKind, errors.New("prohibited using non-primitive type value for map key")

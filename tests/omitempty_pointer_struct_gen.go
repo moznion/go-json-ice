@@ -2,46 +2,41 @@
 
 package tests
 
-import "strconv"
+import "github.com/moznion/go-json-ice/serializer"
 
 func MarshalOmitemptyPointerStructAsJSON(s *OmitemptyPointerStruct) ([]byte, error) {
 	buff := make([]byte, 1, 262)
 	buff[0] = '{'
 	if s.EmptyBool != nil && *s.EmptyBool != false {
 		buff = append(buff, "\"empty_bool\":"...)
-		if *s.EmptyBool {
-			buff = append(buff, "true"...)
-		} else {
-			buff = append(buff, "false"...)
-		}
-
+		buff = serializer.AppendSerializedBool(buff, *s.EmptyBool)
 		buff = append(buff, ',')
 	}
 	if s.EmptyInt != nil && *s.EmptyInt != 0 {
 		buff = append(buff, "\"empty_int\":"...)
-		buff = strconv.AppendInt(buff, int64(*s.EmptyInt), 10)
+		buff = serializer.AppendSerializedInt(buff, int64(*s.EmptyInt))
 		buff = append(buff, ',')
 	}
 	if s.EmptyUint != nil && *s.EmptyUint != 0 {
 		buff = append(buff, "\"empty_uint\":"...)
-		buff = strconv.AppendUint(buff, uint64(*s.EmptyUint), 10)
+		buff = serializer.AppendSerializedUint(buff, uint64(*s.EmptyUint))
 		buff = append(buff, ',')
 	}
 	if s.EmptyFloat != nil && *s.EmptyFloat != 0 {
 		buff = append(buff, "\"empty_float\":"...)
-		buff = strconv.AppendFloat(buff, float64(*s.EmptyFloat), 'e', -1, 64)
+		buff = serializer.AppendSerializedFloat(buff, float64(*s.EmptyFloat))
 		buff = append(buff, ',')
 	}
 	if s.EmptyString != nil && *s.EmptyString != "" {
 		buff = append(buff, "\"empty_string\":"...)
-		buff = strconv.AppendQuote(buff, *s.EmptyString)
+		buff = serializer.AppendSerializedString(buff, *s.EmptyString)
 		buff = append(buff, ',')
 	}
 	if s.EmptySlice != nil && len(s.EmptySlice) > 0 {
 		buff = append(buff, "\"empty_slice\":"...)
 		buff = append(buff, '[')
 		for _, v := range s.EmptySlice {
-			buff = strconv.AppendQuote(buff, v)
+			buff = serializer.AppendSerializedString(buff, v)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -56,9 +51,9 @@ func MarshalOmitemptyPointerStructAsJSON(s *OmitemptyPointerStruct) ([]byte, err
 		buff = append(buff, "\"empty_map\":"...)
 		buff = append(buff, '{')
 		for mapKey, mapValue := range s.EmptyMap {
-			buff = strconv.AppendQuote(buff, mapKey)
+			buff = serializer.AppendSerializedString(buff, mapKey)
 			buff = append(buff, ':')
-			buff = strconv.AppendQuote(buff, mapValue)
+			buff = serializer.AppendSerializedString(buff, mapValue)
 			buff = append(buff, ',')
 		}
 		if buff[len(buff)-1] == ',' {
@@ -73,7 +68,7 @@ func MarshalOmitemptyPointerStructAsJSON(s *OmitemptyPointerStruct) ([]byte, err
 		buff = append(buff, "\"not_empty_string\":null,"...)
 	} else {
 		buff = append(buff, "\"not_empty_string\":"...)
-		buff = strconv.AppendQuote(buff, *s.NotEmptyString)
+		buff = serializer.AppendSerializedString(buff, *s.NotEmptyString)
 		buff = append(buff, ',')
 	}
 	if buff[len(buff)-1] == ',' {
