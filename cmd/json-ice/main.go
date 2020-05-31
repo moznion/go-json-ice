@@ -20,10 +20,11 @@ import (
 )
 
 var (
-	typeName     = flag.String("type", "", "[mandatory] a type name")
-	output       = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
-	givenCapSize = flag.Int64("cap-size", 0, `[optional] a cap-size of a byte slice buffer for marshaling; by default, it calculates this value automatically`)
-	version      = flag.Bool("version", false, `show version information`)
+	typeName      = flag.String("type", "", "[mandatory] a type name")
+	output        = flag.String("output", "", `[optional] output file name (default "srcdir/<type>_gen.go")`)
+	givenCapSize  = flag.Int64("cap-size", 0, `[optional] a cap-size of a byte slice buffer for marshaling; by default, it calculates this value automatically`)
+	version       = flag.Bool("version", false, `show version information`)
+	topLevelArray = flag.Bool("toplevel-array", false, `[optional] generate a marshaler for toplevel-array with given type by "--type" (e.g. "[]string")`)
 )
 
 type kind uint8
@@ -94,139 +95,166 @@ func main() {
 		g.NewNewline(),
 	)
 
-	for _, astFile := range astFiles {
-		for _, decl := range astFile.Decls {
-			genDecl, ok := decl.(*ast.GenDecl)
-			if !ok {
-				continue
-			}
+	fileBaseName := ""
+	if *topLevelArray {
+		sliceType := *typeName
+		matched, err := matchSliceType(sliceType)
+		if err != nil {
+			log.Fatalf(`"--toplevel-array" given, but the type looks not be an array: %s`, sliceType)
+		}
+		subType := matched[1]
 
-			for _, spec := range genDecl.Specs {
-				typeSpec, ok := spec.(*ast.TypeSpec)
+		appendSerializedSliceFuncInvocation, _, _, err := getSerializedValueFuncInvocationCode(sliceType, false)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		rootStmt = rootStmt.AddStatements(g.NewFunc(
+			nil,
+			g.NewFuncSignature(fmt.Sprintf("Marshal%sArrayAsJSON", strcase.ToCamel(subType))).
+				Parameters(g.NewFuncParameter("sl", sliceType)).
+				ReturnTypes("[]byte", "error"),
+			g.NewRawStatementf("buff := make([]byte, 0, %d)", defaultCapScore),
+			g.NewRawStatementf(appendSerializedSliceFuncInvocation, "sl"),
+			g.NewReturnStatement("buff", "nil"),
+		))
+		fileBaseName = strcase.ToSnake(subType)+"_array"
+	} else {
+		for _, astFile := range astFiles {
+			for _, decl := range astFile.Decls {
+				genDecl, ok := decl.(*ast.GenDecl)
 				if !ok {
 					continue
 				}
 
-				structName := typeSpec.Name.Name
-				if *typeName != structName {
-					continue
-				}
-
-				structType, ok := typeSpec.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
-
-				funcName := fmt.Sprintf("Marshal%sAsJSON", structName)
-				funcSignature := g.NewFuncSignature(funcName).
-					Parameters(g.NewFuncParameter("s", "*"+structName)).
-					ReturnTypes("[]byte", "error")
-				funcStmt := g.NewFunc(
-					nil,
-					funcSignature,
-				)
-
-				stmts := make([]g.Statement, 0)
-
-				capScoreSum := int64(2) // len of envelope `{}`
-				for _, field := range structType.Fields.List {
-					fieldName := field.Names[0].Name
-					fieldType := types.ExprString(field.Type)
-					customTag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
-
-					jsonTagValues := strings.Split(customTag.Get("json"), ",")
-					if len(jsonTagValues) <= 0 {
-						// no json field
+				for _, spec := range genDecl.Specs {
+					typeSpec, ok := spec.(*ast.TypeSpec)
+					if !ok {
 						continue
 					}
-					capScoreSum += defaultCapScore
-					jsonPropertyName := jsonTagValues[0]
 
-					isOmitEmpty := false
-					if len(jsonTagValues) >= 2 {
-						for _, v := range jsonTagValues[1:] {
-							if v == "omitempty" {
-								isOmitEmpty = true
-								break
+					structName := typeSpec.Name.Name
+					if *typeName != structName {
+						continue
+					}
+
+					structType, ok := typeSpec.Type.(*ast.StructType)
+					if !ok {
+						continue
+					}
+
+					funcName := fmt.Sprintf("Marshal%sAsJSON", structName)
+					funcSignature := g.NewFuncSignature(funcName).
+						Parameters(g.NewFuncParameter("s", "*"+structName)).
+						ReturnTypes("[]byte", "error")
+					funcStmt := g.NewFunc(
+						nil,
+						funcSignature,
+					)
+
+					stmts := make([]g.Statement, 0)
+
+					capScoreSum := int64(2) // len of envelope `{}`
+					for _, field := range structType.Fields.List {
+						fieldName := field.Names[0].Name
+						fieldType := types.ExprString(field.Type)
+						customTag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
+
+						jsonTagValues := strings.Split(customTag.Get("json"), ",")
+						if len(jsonTagValues) <= 0 {
+							// no json field
+							continue
+						}
+						capScoreSum += defaultCapScore
+						jsonPropertyName := jsonTagValues[0]
+
+						isOmitEmpty := false
+						if len(jsonTagValues) >= 2 {
+							for _, v := range jsonTagValues[1:] {
+								if v == "omitempty" {
+									isOmitEmpty = true
+									break
+								}
 							}
 						}
-					}
 
-					appendSerializedItemFuncInvocation, nillable, fieldKind, err := getSerializedValueFuncInvocationCode(fieldType, false)
-					if err != nil {
-						log.Fatal(fmt.Errorf("[error] failed to generate code: %w", err))
-					}
+						appendSerializedItemFuncInvocation, nillable, fieldKind, err := getSerializedValueFuncInvocationCode(fieldType, false)
+						if err != nil {
+							log.Fatal(fmt.Errorf("[error] failed to generate code: %w", err))
+						}
 
-					buffWriteStmts := []g.Statement{
-						g.NewRawStatementf(`buff = append(buff, "\"%s\":"...)`, jsonPropertyName),
-						g.NewRawStatementf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(fieldKind, nillable == nillablePointer), fieldName)),
-						g.NewRawStatement(`buff = append(buff, ',')`),
-					}
+						buffWriteStmts := []g.Statement{
+							g.NewRawStatementf(`buff = append(buff, "\"%s\":"...)`, jsonPropertyName),
+							g.NewRawStatementf(appendSerializedItemFuncInvocation, fmt.Sprintf("%ss.%s", getDereferenceSigil(fieldKind, nillable == nillablePointer), fieldName)),
+							g.NewRawStatement(`buff = append(buff, ',')`),
+						}
 
-					nonEmptyValueCondition := ""
-					if kind2EmptyValue[fieldKind] != "" {
-						nonEmptyValueCondition = fmt.Sprintf("s.%s != %s", fieldName, kind2EmptyValue[fieldKind])
-					}
-					isNilCondition := ""
-					switch nillable {
-					case nillablePointer:
-						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+						nonEmptyValueCondition := ""
 						if kind2EmptyValue[fieldKind] != "" {
-							nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, kind2EmptyValue[fieldKind])
-						} else {
-							nonEmptyValueCondition = fmt.Sprintf("s.%s != nil", fieldName)
+							nonEmptyValueCondition = fmt.Sprintf("s.%s != %s", fieldName, kind2EmptyValue[fieldKind])
 						}
-					case nillableSliceOrMap:
-						capScoreSum += 20 // XXX add extra score if the field is slice or map
-						isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
-						nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && len(s.%s) > 0", fieldName, fieldName)
-					}
-
-					if isOmitEmpty {
-						if nonEmptyValueCondition != "" {
-							stmts = append(stmts, g.NewIf(nonEmptyValueCondition, buffWriteStmts...))
-						} else {
-							stmts = append(stmts, buffWriteStmts...)
-						}
-					} else {
-						stmt := buffWriteStmts
-						if isNilCondition != "" {
-							stmt = []g.Statement{g.NewIf(
-								isNilCondition,
-								g.NewRawStatementf(
-									`buff = append(buff, "\"%s\":null,"...)`,
-									jsonPropertyName,
-								),
-							).Else(g.NewElse(buffWriteStmts...))}
-						}
-						stmts = append(stmts, stmt...)
-					}
-				}
-
-				stmts = append(
-					stmts,
-					// dealing with trailing comma
-					g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
-						Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
-
-					g.NewReturnStatement("buff, nil"),
-				)
-
-				rootStmt = rootStmt.AddStatements(
-					funcStmt.AddStatements(
-						g.NewRawStatementf("buff := make([]byte, 1, %d)", func() int64 {
-							if *givenCapSize > 0 {
-								return *givenCapSize
+						isNilCondition := ""
+						switch nillable {
+						case nillablePointer:
+							isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+							if kind2EmptyValue[fieldKind] != "" {
+								nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && *s.%s != %s", fieldName, fieldName, kind2EmptyValue[fieldKind])
+							} else {
+								nonEmptyValueCondition = fmt.Sprintf("s.%s != nil", fieldName)
 							}
-							return int64(float64(capScoreSum) * 1.3)
-						}()),
-						g.NewRawStatement("buff[0] = '{'"),
-					).AddStatements(
-						stmts...,
-					),
-				)
+						case nillableSliceOrMap:
+							capScoreSum += 20 // XXX add extra score if the field is slice or map
+							isNilCondition = fmt.Sprintf("s.%s == nil", fieldName)
+							nonEmptyValueCondition = fmt.Sprintf("s.%s != nil && len(s.%s) > 0", fieldName, fieldName)
+						}
+
+						if isOmitEmpty {
+							if nonEmptyValueCondition != "" {
+								stmts = append(stmts, g.NewIf(nonEmptyValueCondition, buffWriteStmts...))
+							} else {
+								stmts = append(stmts, buffWriteStmts...)
+							}
+						} else {
+							stmt := buffWriteStmts
+							if isNilCondition != "" {
+								stmt = []g.Statement{g.NewIf(
+									isNilCondition,
+									g.NewRawStatementf(
+										`buff = append(buff, "\"%s\":null,"...)`,
+										jsonPropertyName,
+									),
+								).Else(g.NewElse(buffWriteStmts...))}
+							}
+							stmts = append(stmts, stmt...)
+						}
+					}
+
+					stmts = append(
+						stmts,
+						// dealing with trailing comma
+						g.NewIf(`buff[len(buff)-1] == ','`, g.NewRawStatement("buff[len(buff)-1] = '}'")).
+							Else(g.NewElse(g.NewRawStatement("buff = append(buff, '}')"))),
+
+						g.NewReturnStatement("buff, nil"),
+					)
+
+					rootStmt = rootStmt.AddStatements(
+						funcStmt.AddStatements(
+							g.NewRawStatementf("buff := make([]byte, 1, %d)", func() int64 {
+								if *givenCapSize > 0 {
+									return *givenCapSize
+								}
+								return int64(float64(capScoreSum) * 1.3)
+							}()),
+							g.NewRawStatement("buff[0] = '{'"),
+						).AddStatements(
+							stmts...,
+						),
+					)
+				}
 			}
 		}
+		fileBaseName = strcase.ToSnake(*typeName)
 	}
 
 	code, err := rootStmt.
@@ -237,13 +265,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(getFilenameToGenerate(args), []byte(code), 0644)
+	err = ioutil.WriteFile(getFilenameToGenerate(args, fileBaseName), []byte(code), 0644)
 	if err != nil {
 		log.Fatal(fmt.Errorf("[error] failed output generated code to a file: %w", err))
 	}
 }
 
-func getFilenameToGenerate(args []string) string {
+func getFilenameToGenerate(args []string, typeName string) string {
 	if *output != "" {
 		return *output
 	}
@@ -254,7 +282,7 @@ func getFilenameToGenerate(args []string) string {
 	} else {
 		dir = filepath.Dir(args[0])
 	}
-	return fmt.Sprintf("%s/%s_gen.go", dir, strcase.ToSnake(*typeName))
+	return fmt.Sprintf("%s/%s_gen.go", dir, strcase.ToSnake(typeName))
 }
 
 func isDirectory(name string) bool {
@@ -300,7 +328,7 @@ func getSerializedValueFuncInvocationCode(typ string, isMapKey bool) (string, ni
 		}
 
 		// slice type
-		if matched := regexp.MustCompile("^\\[](.+)").FindStringSubmatch(typ); len(matched) >= 2 {
+		if matched, err := matchSliceType(typ); err == nil {
 			valueType := matched[1]
 
 			appendSerializedValueFuncInvocation, nillable, fieldKind, err := getSerializedValueFuncInvocationCode(valueType, false)
@@ -404,4 +432,12 @@ func getSerializedValueFuncInvocationCode(typ string, isMapKey bool) (string, ni
 		}
 		return code, nillable, nonPrimitiveKind, nil
 	}
+}
+
+func matchSliceType(typ string) ([]string, error) {
+	matched := regexp.MustCompile("^\\[](.+)").FindStringSubmatch(typ)
+	if len(matched) < 2 {
+		return nil, errors.New("doesn't match with slice type")
+	}
+	return matched, nil
 }
