@@ -164,7 +164,7 @@ func main() {
 						continue
 					}
 
-					funcName := fmt.Sprintf("Marshal%sAsJSON", structName)
+					funcName := fmt.Sprintf("Marshal%sAsJSON", strcase.ToCamel(structName))
 					funcSignature := g.NewFuncSignature(funcName).
 						Parameters(g.NewFuncParameter("s", "*"+structName)).
 						ReturnTypes("[]byte", "error")

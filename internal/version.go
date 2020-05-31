@@ -15,7 +15,7 @@ type version struct {
 
 // ShowVersion shows the version and revision as JSON string.
 func ShowVersion() {
-	versionJSON, _ := MarshalversionAsJSON(&version{
+	versionJSON, _ := MarshalVersionAsJSON(&version{
 		Version:  ver,
 		Revision: rev,
 	})

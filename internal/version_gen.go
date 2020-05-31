@@ -4,7 +4,7 @@ package internal
 
 import "github.com/moznion/go-json-ice/serializer"
 
-func MarshalversionAsJSON(s *version) ([]byte, error) {
+func MarshalVersionAsJSON(s *version) ([]byte, error) {
 	buff := make([]byte, 1, 74)
 	buff[0] = '{'
 	buff = append(buff, "\"version\":"...)
