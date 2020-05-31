@@ -1,6 +1,6 @@
 # go-json-ice
 
-Simple, less runtime dependencies and fast JSON marshaler for go and tinygo.
+A simple code generator of JSON marshaler for go and tinygo. Generated marshaler has fewer runtime dependencies and it's fast.
 
 ## Motivation
 
@@ -34,7 +34,7 @@ type AwesomeStruct struct {
 }
 ```
 
-then it generates a marshaler as `MarshalAwesomeStructAsJSON(s *AwesomeStruct) ([]byte, error)`; you can use that like the following:
+then it generates marshaler code as `MarshalAwesomeStructAsJSON(s *AwesomeStruct) ([]byte, error)`; you can use that like the following:
 
 ```go
 marshaled, err := MarshalAwesomeStructAsJSON(&AwesomeStruct{
@@ -140,6 +140,15 @@ func (f *Foo) MarshalJSON() ([]byte, error) {
 	return MarshalversionAsJSON(f)
 }
 ```
+
+### How to marshal toplevel array and map JSON
+
+It is necessary to generate marshaler code by like the following instructions:
+
+- `//go:generate json-ice --type=[]string --toplevel-array`
+  - then, it generates a marshaler for toplevel array `[]string` as `MarshalStringArrayAsJSON(st []string) ([]byte, error)`
+- `//go:generate json-ice --type=map[string]string --toplevel-map`
+  - then, it generates a marshaler for toplevel map `map[string]string` as `MarshalStringToStringMapAsJSON(mt map[string]string) ([]byte, error)`
 
 ## Restrictions / Known issues
 
