@@ -25,6 +25,7 @@ var (
 	givenCapSize  = flag.Int64("cap-size", 0, `[optional] a cap-size of a byte slice buffer for marshaling; by default, it calculates this value automatically`)
 	version       = flag.Bool("version", false, `show version information`)
 	topLevelArray = flag.Bool("toplevel-array", false, `[optional] generate a marshaler for toplevel-array with given type by "--type" (e.g. "[]string")`)
+	topLevelMap   = flag.Bool("toplevel-map", false, `[optional] generate a marshaler for toplevel-array with given type by "--type" (e.g. "[]string")`)
 )
 
 type kind uint8
@@ -112,13 +113,33 @@ func main() {
 		rootStmt = rootStmt.AddStatements(g.NewFunc(
 			nil,
 			g.NewFuncSignature(fmt.Sprintf("Marshal%sArrayAsJSON", strcase.ToCamel(subType))).
-				Parameters(g.NewFuncParameter("sl", sliceType)).
+				Parameters(g.NewFuncParameter("st", sliceType)).
 				ReturnTypes("[]byte", "error"),
 			g.NewRawStatementf("buff := make([]byte, 0, %d)", defaultCapScore),
-			g.NewRawStatementf(appendSerializedSliceFuncInvocation, "sl"),
+			g.NewRawStatementf(appendSerializedSliceFuncInvocation, "st"),
 			g.NewReturnStatement("buff", "nil"),
 		))
-		fileBaseName = strcase.ToSnake(subType)+"_array"
+		fileBaseName = strcase.ToSnake(subType) + "_array"
+	} else if *topLevelMap {
+		mapType := *typeName
+		matched, err := matchMapType(mapType)
+		if err != nil {
+			log.Fatalf(`"--toplevel-map" given, but the type looks not be a amp: %s`, mapType)
+		}
+		keyType := matched[1]
+		valueType := matched[2]
+
+		appendSerializedMapFuncInvocation, _, _, err := getSerializedValueFuncInvocationCode(mapType, false)
+		rootStmt = rootStmt.AddStatements(g.NewFunc(
+			nil,
+			g.NewFuncSignature(fmt.Sprintf("Marshal%sTo%sMapAsJSON", strcase.ToCamel(keyType), strcase.ToCamel(valueType))).
+				Parameters(g.NewFuncParameter("mt", mapType)).
+				ReturnTypes("[]byte", "error"),
+			g.NewRawStatementf("buff := make([]byte, 0, %d)", defaultCapScore),
+			g.NewRawStatementf(appendSerializedMapFuncInvocation, "mt"),
+			g.NewReturnStatement("buff", "nil"),
+		))
+		fileBaseName = fmt.Sprintf("%s_to_%s_map", strcase.ToSnake(keyType), strcase.ToSnake(valueType))
 	} else {
 		for _, astFile := range astFiles {
 			for _, decl := range astFile.Decls {
@@ -364,7 +385,7 @@ func getSerializedValueFuncInvocationCode(typ string, isMapKey bool) (string, ni
 		}
 
 		// map type
-		if matched := regexp.MustCompile("^map\\[([^]]+)](.+)").FindStringSubmatch(typ); len(matched) >= 3 {
+		if matched, err := matchMapType(typ); err == nil {
 			keyType := matched[1]
 			valueType := matched[2]
 			appendSerializedMapKeyTypeInvocation, keyNillable, keyKind, err := getSerializedValueFuncInvocationCode(keyType, true)
@@ -438,6 +459,14 @@ func matchSliceType(typ string) ([]string, error) {
 	matched := regexp.MustCompile("^\\[](.+)").FindStringSubmatch(typ)
 	if len(matched) < 2 {
 		return nil, errors.New("doesn't match with slice type")
+	}
+	return matched, nil
+}
+
+func matchMapType(typ string) ([]string, error) {
+	matched := regexp.MustCompile("^map\\[([^]]+)](.+)").FindStringSubmatch(typ)
+	if len(matched) < 3 {
+		return nil, errors.New("doesn't match with map type")
 	}
 	return matched, nil
 }

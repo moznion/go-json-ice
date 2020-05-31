@@ -4,10 +4,10 @@ package tests
 
 import "github.com/moznion/go-json-ice/serializer"
 
-func MarshalStringArrayAsJSON(sl []string) ([]byte, error) {
+func MarshalStringArrayAsJSON(st []string) ([]byte, error) {
 	buff := make([]byte, 0, 20)
 	buff = append(buff, '[')
-	for _, v := range sl {
+	for _, v := range st {
 		buff = serializer.AppendSerializedString(buff, v)
 		buff = append(buff, ',')
 	}
