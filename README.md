@@ -1,6 +1,8 @@
 # go-json-ice
 
-A simple code generator of JSON marshaler for go and tinygo. Generated marshaler has fewer runtime dependencies and it's fast.
+A simple code generator of JSON marshaler for go and tinygo.
+
+Generated marshaler has fewer runtime dependencies (i.e. it __doesn't__ depend on `encoding/json` and reflection) and it's fast.
 
 ## Motivation
 
@@ -47,7 +49,7 @@ if err != nil {
 fmt.Printf("%s\n", marshaled) // => {"foo":"buz"}
 ```
 
-## Usage
+## Usage of the generator command
 
 ```
 json-ice:
@@ -152,6 +154,9 @@ It is necessary to generate marshaler code by like the following instructions:
 
 ## Restrictions / Known issues
 
+- it cannot marshal `interface{}` values
+  - because it doesn't use reflection so it cannot resolve the actual type dynamically
+  - in other words, the target type has to be resolvable as statically
 - it cannot marshal `named type` and `type alias` types automatically
   - if you would like to marshal such them, please implement `json.Marshaler` on the type as like as the above FAQ answer.
 
