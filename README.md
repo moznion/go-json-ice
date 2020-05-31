@@ -57,6 +57,10 @@ json-ice:
         [optional] a cap-size of a byte slice buffer for marshaling; by default, it calculates this value automatically
   -output string
         [optional] output file name (default "srcdir/<type>_gen.go")
+  -toplevel-array
+        [optional] generate a marshaler for toplevel-array with given type by "--type" (e.g. "[]string")
+  -toplevel-map
+        [optional] generate a marshaler for toplevel-array with given type by "--type" (e.g. "[]string")
   -type string
         [mandatory] a type name
   -version
