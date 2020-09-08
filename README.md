@@ -143,7 +143,7 @@ type Bar struct {
 }
 
 func (f *Foo) MarshalJSON() ([]byte, error) {
-	return MarshalversionAsJSON(f)
+	return MarshalFooAsJSON(f)
 }
 ```
 
