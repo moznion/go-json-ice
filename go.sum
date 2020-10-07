@@ -5,6 +5,8 @@ github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334 h1:VHgatEHNcBFE
 github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
 github.com/iancoleman/strcase v0.1.0 h1:Lar8rut26AXkJUmVOb2bRsFGv//+tJBeJLxXvpZpF1Q=
 github.com/iancoleman/strcase v0.1.0/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
+github.com/iancoleman/strcase v0.1.2 h1:gnomlvw9tnV3ITTAxzKSgTF+8kFWcU/f+TgttpXGz1U=
+github.com/iancoleman/strcase v0.1.2/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
 github.com/moznion/go-errgen v1.3.1/go.mod h1:+BkSRLNc98WWAJmdtxYcxxucQ7sl8m4sroepmHio33Y=
 github.com/moznion/go-errgen v1.8.1/go.mod h1:3mE7v+d7czyIqbfd3jOK/wLgRn5lTOtNRNEeCHXHaCk=
 github.com/moznion/gowrtr v0.0.0-20190121085203-08e30cf60446/go.mod h1:u2ZFWAHT1c56nmSP3w0C4N9MZtI2UE7YwbkItJAsF78=
