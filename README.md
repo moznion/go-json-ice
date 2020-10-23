@@ -112,6 +112,10 @@ ok      github.com/moznion/go-json-ice/benchmark        4.287s
 
 ## FAQ
 
+### Does this library support JSON unmarshaling?
+
+No, this only supports marshaling. If you are looking for a way to marshal JSON with tinygo, please consider using [buger/jsonparser](https://github.com/buger/jsonparser).
+
 ### How to marshal non-primitive types
 
 For example,
