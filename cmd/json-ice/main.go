@@ -179,6 +179,11 @@ func main() {
 					for _, field := range structType.Fields.List {
 						fieldName := field.Names[0].Name
 						fieldType := types.ExprString(field.Type)
+
+						if field.Tag == nil {
+							// no tag (i.e. annotation)
+							continue
+						}
 						customTag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
 
 						jsonTagValues := strings.Split(customTag.Get("json"), ",")
