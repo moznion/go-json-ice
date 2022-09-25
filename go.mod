@@ -1,6 +1,6 @@
 module github.com/moznion/go-json-ice
 
-go 1.14
+go 1.19
 
 require (
 	github.com/iancoleman/strcase v0.1.3
