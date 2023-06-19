@@ -8,6 +8,8 @@ github.com/moznion/go-errgen v1.8.1/go.mod h1:3mE7v+d7czyIqbfd3jOK/wLgRn5lTOtNRN
 github.com/moznion/gowrtr v0.0.0-20190121085203-08e30cf60446/go.mod h1:u2ZFWAHT1c56nmSP3w0C4N9MZtI2UE7YwbkItJAsF78=
 github.com/moznion/gowrtr v1.5.1 h1:tLvtGNmYTUjjamyldLv8GBVlJfz2jSXQefi/kSWKcOI=
 github.com/moznion/gowrtr v1.5.1/go.mod h1:QyqdbRx7pagfuZHDR1goNAgHeHRdzQYSsk0tyBd5PI8=
+github.com/moznion/gowrtr v1.7.0 h1:bIOdlAeEHDJEs9o2TIS7Oq3HsPIvxGauPHf3a8IVjXE=
+github.com/moznion/gowrtr v1.7.0/go.mod h1:sjAFodAvRj5fljRjf9yht52GMBVzELkyxcE31B1vJgg=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
